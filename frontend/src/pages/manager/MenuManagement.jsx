@@ -9,6 +9,8 @@ import {
 } from '../../api/menuApi';
 import Spinner from '../../components/Spinner';
 import EmptyState from '../../components/EmptyState';
+import SmartImage from '../../components/SmartImage';
+import '../../styles/store.css';
 
 const emptyItemForm = {
   name: '',
@@ -29,12 +31,20 @@ const MenuManagement = () => {
   const [addingCategory, setAddingCategory] = useState(false);
 
   const [itemForm, setItemForm] = useState(emptyItemForm);
-  const [addingItem, setAddingItem] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [saving, setSaving] = useState(false);
   const [showItemForm, setShowItemForm] = useState(false);
+  const [formError, setFormError] = useState('');
+  const [toast, setToast] = useState('');
+
+  const notify = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(''), 2200);
+  };
 
   const loadMenu = async (restaurantId) => {
     const data = await getMenuByRestaurant(restaurantId);
-    setMenu(data.menu);
+    setMenu(data.menu || []);
   };
 
   useEffect(() => {
@@ -42,7 +52,7 @@ const MenuManagement = () => {
       try {
         const resData = await getMyRestaurants();
         if (resData.restaurants.length === 0) {
-          setError('No restaurant found for this manager account');
+          setError('No store found for this manager account');
           setLoading(false);
           return;
         }
@@ -50,7 +60,7 @@ const MenuManagement = () => {
         setRestaurant(myRestaurant);
         await loadMenu(myRestaurant._id);
       } catch (err) {
-        setError('Failed to load menu');
+        setError('Failed to load products. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -66,42 +76,65 @@ const MenuManagement = () => {
       await createCategory(restaurant._id, newCategory.trim(), menu.length);
       setNewCategory('');
       await loadMenu(restaurant._id);
+      notify('Category added');
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to add category');
+      notify(err.response?.data?.message || 'Failed to add category');
     } finally {
       setAddingCategory(false);
     }
   };
 
-  const openItemForm = (categoryId) => {
+  const openAdd = (categoryId) => {
+    setEditingId(null);
+    setFormError('');
     setItemForm({ ...emptyItemForm, category: categoryId });
     setShowItemForm(true);
   };
 
-  const handleAddItem = async (e) => {
+  const openEdit = (item, categoryId) => {
+    setEditingId(item._id);
+    setFormError('');
+    setItemForm({
+      name: item.name,
+      description: item.description || '',
+      price: item.price,
+      image: item.image || '',
+      isVeg: !!item.isVeg,
+      category: categoryId,
+    });
+    setShowItemForm(true);
+  };
+
+  const handleSaveItem = async (e) => {
     e.preventDefault();
-    if (!itemForm.name || !itemForm.price || !itemForm.category) {
-      alert('Name, price, and category are required');
+    if (!itemForm.name.trim() || !itemForm.price || Number(itemForm.price) <= 0) {
+      setFormError('Name and a price greater than 0 are required');
       return;
     }
-    setAddingItem(true);
+    setSaving(true);
+    setFormError('');
     try {
-      await createMenuItem({
-        restaurant: restaurant._id,
-        category: itemForm.category,
-        name: itemForm.name,
+      const payload = {
+        name: itemForm.name.trim(),
         description: itemForm.description,
         price: Number(itemForm.price),
         image: itemForm.image,
         isVeg: itemForm.isVeg,
-      });
-      setItemForm(emptyItemForm);
+      };
+      if (editingId) {
+        await updateMenuItem(editingId, payload);
+      } else {
+        await createMenuItem({ ...payload, restaurant: restaurant._id, category: itemForm.category });
+      }
       setShowItemForm(false);
+      setItemForm(emptyItemForm);
       await loadMenu(restaurant._id);
+      notify(editingId ? 'Product updated' : 'Product added');
+      setEditingId(null);
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to add item');
+      setFormError(err.response?.data?.message || 'Could not save the product. Please try again.');
     } finally {
-      setAddingItem(false);
+      setSaving(false);
     }
   };
 
@@ -110,39 +143,39 @@ const MenuManagement = () => {
       await updateMenuItem(item._id, { isAvailable: !item.isAvailable });
       await loadMenu(restaurant._id);
     } catch (err) {
-      alert('Failed to update item');
+      notify('Failed to update the product');
     }
   };
 
-  const handleDeleteItem = async (itemId) => {
-    if (!window.confirm('Delete this item?')) return;
+  const handleDeleteItem = async (item) => {
+    if (!window.confirm(`Delete "${item.name}"?`)) return;
     try {
-      await deleteMenuItem(itemId);
+      await deleteMenuItem(item._id);
       await loadMenu(restaurant._id);
+      notify('Product deleted');
     } catch (err) {
-      alert('Failed to delete item');
+      notify('Failed to delete the product');
     }
   };
 
-  if (loading) return <Spinner label="Loading menu..." />;
+  if (loading) return <Spinner label="Loading products..." />;
   if (error) return <div className="page-container"><EmptyState icon="⚠️" title="Error" subtitle={error} /></div>;
 
   return (
     <div className="page-container fade-in">
-      <h1 style={{ fontSize: 26, fontWeight: 800, marginBottom: 4 }}>{restaurant.name} — Menu</h1>
+      <h1 style={{ fontSize: 26, fontWeight: 800, marginBottom: 4 }}>{restaurant.name} - Products</h1>
       <p style={{ color: 'var(--color-text-muted)', marginTop: 0, marginBottom: 24 }}>
-        Add categories and items to your menu
+        Manage your categories and products
       </p>
 
-      {/* Add category form */}
-      <form onSubmit={handleAddCategory} className="card" style={{ padding: 16, marginBottom: 24, display: 'flex', gap: 10 }}>
+      <form onSubmit={handleAddCategory} className="card" style={{ padding: 16, marginBottom: 24, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         <input
           type="text"
           placeholder="New category name (e.g. Desserts)"
           value={newCategory}
           onChange={(e) => setNewCategory(e.target.value)}
           className="input-field"
-          style={{ flex: 1 }}
+          style={{ flex: 1, minWidth: 200 }}
         />
         <button type="submit" disabled={addingCategory} className="btn btn-primary">
           {addingCategory ? 'Adding...' : '+ Add Category'}
@@ -157,50 +190,31 @@ const MenuManagement = () => {
         <div key={category._id} style={{ marginBottom: 32 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, borderBottom: '2px solid var(--color-primary-light)', paddingBottom: 8 }}>
             <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>{category.name}</h2>
-            <button onClick={() => openItemForm(category._id)} className="btn btn-outline btn-sm">
-              + Add Item
-            </button>
+            <button onClick={() => openAdd(category._id)} className="btn btn-outline btn-sm">+ Add Product</button>
           </div>
 
           {category.items.length === 0 ? (
-            <p style={{ color: 'var(--color-text-muted)', fontSize: 14 }}>No items yet.</p>
+            <p style={{ color: 'var(--color-text-muted)', fontSize: 14 }}>No products yet.</p>
           ) : (
-            <div className="grid-cards">
+            <div className="prod-grid">
               {category.items.map((item) => (
                 <div key={item._id} className="card" style={{ overflow: 'hidden' }}>
-                  <div
-                    style={{
-                      height: 110,
-                      background: item.image
-                        ? `url(${item.image}) center/cover no-repeat`
-                        : 'linear-gradient(135deg, var(--color-primary-light), #fed7aa)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 36,
-                    }}
-                  >
-                    {!item.image && '🍽️'}
-                  </div>
+                  <SmartImage src={item.image} alt={item.name} className="prod-img" style={{ height: 130 }} fallback="🍽" />
                   <div style={{ padding: 14 }}>
-                    <h4 style={{ margin: '0 0 4px', fontSize: 14 }}>{item.name}</h4>
-                    <p style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 700, color: 'var(--color-primary-dark)' }}>
-                      Rs. {item.price}
+                    <h4 style={{ margin: '0 0 4px', fontSize: 15 }}>{item.name}</h4>
+                    <p style={{ margin: '0 0 10px', fontSize: 14, fontWeight: 700, color: 'var(--color-primary-dark)' }}>
+                      Rs. {item.price}{!item.isAvailable && <span style={{ color: 'var(--color-danger)', marginLeft: 8, fontSize: 12 }}>Sold out</span>}
                     </p>
-                    <div style={{ display: 'flex', gap: 6 }}>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      <button onClick={() => openEdit(item, category._id)} className="btn btn-outline btn-sm" style={{ flex: 1 }}>Edit</button>
                       <button
                         onClick={() => handleToggleAvailability(item)}
                         className={item.isAvailable ? 'btn btn-outline btn-sm' : 'btn btn-primary btn-sm'}
                         style={{ flex: 1 }}
                       >
-                        {item.isAvailable ? 'Mark Sold Out' : 'Mark Available'}
+                        {item.isAvailable ? 'Sold out' : 'Available'}
                       </button>
-                      <button
-                        onClick={() => handleDeleteItem(item._id)}
-                        className="btn btn-danger-outline btn-sm"
-                      >
-                        🗑
-                      </button>
+                      <button onClick={() => handleDeleteItem(item)} className="btn btn-danger-outline btn-sm">Delete</button>
                     </div>
                   </div>
                 </div>
@@ -210,78 +224,59 @@ const MenuManagement = () => {
         </div>
       ))}
 
-      {/* Add item modal */}
       {showItemForm && (
         <div
-          style={{
-            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300,
-          }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300, padding: 16 }}
           onClick={() => setShowItemForm(false)}
         >
           <form
-            onSubmit={handleAddItem}
+            onSubmit={handleSaveItem}
             onClick={(e) => e.stopPropagation()}
             className="card fade-in"
-            style={{ padding: 24, width: '90%', maxWidth: 420 }}
+            style={{ padding: 24, width: '100%', maxWidth: 440, maxHeight: '90vh', overflowY: 'auto' }}
           >
-            <h3 style={{ marginTop: 0 }}>Add Menu Item</h3>
+            <h3 style={{ marginTop: 0 }}>{editingId ? 'Edit Product' : 'Add Product'}</h3>
+            {formError && (
+              <div style={{ background: '#fef2f2', color: '#b91c1c', padding: '10px 12px', borderRadius: 8, fontSize: 14, marginBottom: 12 }}>
+                {formError}
+              </div>
+            )}
 
             <label className="input-label">Name</label>
-            <input
-              type="text"
-              className="input-field"
-              style={{ marginBottom: 12 }}
-              value={itemForm.name}
-              onChange={(e) => setItemForm({ ...itemForm, name: e.target.value })}
-            />
+            <input type="text" className="input-field" style={{ marginBottom: 12 }} value={itemForm.name}
+              onChange={(e) => setItemForm({ ...itemForm, name: e.target.value })} />
 
             <label className="input-label">Description</label>
-            <input
-              type="text"
-              className="input-field"
-              style={{ marginBottom: 12 }}
-              value={itemForm.description}
-              onChange={(e) => setItemForm({ ...itemForm, description: e.target.value })}
-            />
+            <input type="text" className="input-field" style={{ marginBottom: 12 }} value={itemForm.description}
+              onChange={(e) => setItemForm({ ...itemForm, description: e.target.value })} />
 
             <label className="input-label">Price (Rs.)</label>
-            <input
-              type="number"
-              className="input-field"
-              style={{ marginBottom: 12 }}
-              value={itemForm.price}
-              onChange={(e) => setItemForm({ ...itemForm, price: e.target.value })}
-            />
+            <input type="number" min="1" className="input-field" style={{ marginBottom: 12 }} value={itemForm.price}
+              onChange={(e) => setItemForm({ ...itemForm, price: e.target.value })} />
 
-            <label className="input-label">Image URL (optional)</label>
-            <input
-              type="text"
-              className="input-field"
-              style={{ marginBottom: 12 }}
-              placeholder="https://..."
-              value={itemForm.image}
-              onChange={(e) => setItemForm({ ...itemForm, image: e.target.value })}
-            />
+            <label className="input-label">Image path or URL (optional)</label>
+            <input type="text" className="input-field" style={{ marginBottom: 12 }} placeholder="/images/burger.jpg" value={itemForm.image}
+              onChange={(e) => setItemForm({ ...itemForm, image: e.target.value })} />
 
             <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, fontSize: 14 }}>
-              <input
-                type="checkbox"
-                checked={itemForm.isVeg}
-                onChange={(e) => setItemForm({ ...itemForm, isVeg: e.target.checked })}
-              />
+              <input type="checkbox" style={{ width: 'auto' }} checked={itemForm.isVeg}
+                onChange={(e) => setItemForm({ ...itemForm, isVeg: e.target.checked })} />
               Vegetarian
             </label>
 
             <div style={{ display: 'flex', gap: 10 }}>
-              <button type="button" onClick={() => setShowItemForm(false)} className="btn btn-outline" style={{ flex: 1 }}>
-                Cancel
-              </button>
-              <button type="submit" disabled={addingItem} className="btn btn-primary" style={{ flex: 1 }}>
-                {addingItem ? 'Adding...' : 'Add Item'}
+              <button type="button" onClick={() => setShowItemForm(false)} className="btn btn-outline" style={{ flex: 1 }}>Cancel</button>
+              <button type="submit" disabled={saving} className="btn btn-primary" style={{ flex: 1 }}>
+                {saving ? 'Saving...' : editingId ? 'Save changes' : 'Add product'}
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {toast && (
+        <div className="fade-in" style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: 'var(--color-dark)', color: '#fff', padding: '12px 20px', borderRadius: 'var(--radius-md)', fontSize: 14, fontWeight: 600, zIndex: 400 }}>
+          {toast}
         </div>
       )}
     </div>

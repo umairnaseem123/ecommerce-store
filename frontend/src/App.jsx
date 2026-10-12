@@ -5,7 +5,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
-import RoleRedirect from './pages/RoleRedirect';
+import Home from './pages/Home';
 import ProtectedRoute from './routes/ProtectedRoute';
 import RoleRoute from './routes/RoleRoute';
 
@@ -29,50 +29,22 @@ function App() {
         <BrowserRouter>
           <Navbar />
           <Routes>
-            <Route path="/" element={<ProtectedRoute><RoleRedirect /></ProtectedRoute>} />
+            <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/restaurants" element={<RestaurantList />} />
             <Route path="/restaurant/:id" element={<RestaurantMenu />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/order-confirmation/:id" element={<OrderConfirmation />} />
-            <Route path="/my-orders" element={<MyOrders />} />
+            <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+            <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+            <Route path="/order-confirmation/:id" element={<ProtectedRoute><OrderConfirmation /></ProtectedRoute>} />
+            <Route path="/my-orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
             <Route path="/manager/orders" element={<RoleRoute allowedRoles={['manager']}><OrderDashboard /></RoleRoute>} />
             <Route path="/manager/menu" element={<RoleRoute allowedRoles={['manager']}><MenuManagement /></RoleRoute>} />
 
-            <Route
-              path="/customer"
-              element={
-                <RoleRoute allowedRoles={['customer']}>
-                  <CustomerDashboard />
-                </RoleRoute>
-              }
-            />
-            <Route
-              path="/kitchen"
-              element={
-                <RoleRoute allowedRoles={['kitchen']}>
-                  <KitchenDashboard />
-                </RoleRoute>
-              }
-            />
-            <Route
-              path="/manager"
-              element={
-                <RoleRoute allowedRoles={['manager']}>
-                  <ManagerDashboard />
-                </RoleRoute>
-              }
-            />
-            <Route
-              path="/admin"
-              element={
-                <RoleRoute allowedRoles={['admin']}>
-                  <AdminDashboard />
-                </RoleRoute>
-              }
-            />
+            <Route path="/customer" element={<RoleRoute allowedRoles={['customer']}><CustomerDashboard /></RoleRoute>} />
+            <Route path="/kitchen" element={<RoleRoute allowedRoles={['kitchen']}><KitchenDashboard /></RoleRoute>} />
+            <Route path="/manager" element={<RoleRoute allowedRoles={['manager']}><ManagerDashboard /></RoleRoute>} />
+            <Route path="/admin" element={<RoleRoute allowedRoles={['admin']}><AdminDashboard /></RoleRoute>} />
           </Routes>
           <Footer />
         </BrowserRouter>

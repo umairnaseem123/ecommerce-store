@@ -19,56 +19,36 @@ const Register = () => {
       await register(form);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
+      setError(err.response?.data?.message || 'Could not create your account. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-sm bg-white p-8 rounded-xl shadow">
-        <h1 className="text-2xl font-semibold mb-6 text-center">Create account</h1>
-        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="text"
-            name="name"
-            placeholder="Full name"
-            value={form.name}
-            onChange={handleChange}
-            required
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black"
-          />
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={form.email}
-            onChange={handleChange}
-            required
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black"
-          />
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={form.password}
-            onChange={handleChange}
-            required
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black"
-          />
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-black text-white rounded-lg py-2 font-medium hover:bg-gray-800 transition disabled:opacity-50"
-          >
+    <div className="auth-wrap">
+      <div className="auth-card fade-in">
+        <h1>Create your account</h1>
+        <p className="sub">It takes less than a minute.</p>
+        {error && <div className="auth-error">{error}</div>}
+        <form onSubmit={handleSubmit}>
+          <div className="field">
+            <label className="input-label" htmlFor="name">Full name</label>
+            <input id="name" name="name" className="input-field" value={form.name} onChange={handleChange} required />
+          </div>
+          <div className="field">
+            <label className="input-label" htmlFor="email">Email</label>
+            <input id="email" name="email" type="email" className="input-field" value={form.email} onChange={handleChange} required />
+          </div>
+          <div className="field">
+            <label className="input-label" htmlFor="password">Password</label>
+            <input id="password" name="password" type="password" className="input-field" value={form.password} onChange={handleChange} required />
+          </div>
+          <button type="submit" disabled={loading} className="btn btn-primary" style={{ width: '100%', padding: 13 }}>
             {loading ? 'Creating account...' : 'Create account'}
           </button>
         </form>
-        <p className="text-sm text-center mt-4 text-gray-500">
-          Already have an account? <Link to="/login" className="text-black font-medium">Sign in</Link>
-        </p>
+        <p className="auth-alt">Already have an account? <Link to="/login">Sign in</Link></p>
       </div>
     </div>
   );

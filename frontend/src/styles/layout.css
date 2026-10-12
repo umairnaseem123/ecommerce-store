@@ -1,0 +1,3 @@
+﻿/* Keeps the footer at the bottom on short pages (cart, orders, etc.) */
+#root{min-height:100vh;display:flex;flex-direction:column}
+#root>:not(.nb):not(footer){flex:1;width:100%}
