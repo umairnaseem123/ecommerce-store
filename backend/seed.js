@@ -36,12 +36,12 @@ const STORES = [
     city: 'Karachi',
     openingHours: '12:00 PM - 1:00 AM',
     rating: 4.6,
-    coverImage: img('burger.avif'),
+    coverImage: img('burger.jpg'),
     categories: [
       {
         name: 'Burgers',
         items: [
-          { name: 'Classic Beef Burger', description: 'Double beef patty, cheddar, pickles and house sauce.', price: 650, image: 'burger.avif', tags: ['Bestseller'] },
+          { name: 'Classic Beef Burger', description: 'Double beef patty, cheddar, pickles and house sauce.', price: 650, image: 'burger.jpg', tags: ['Bestseller'] },
           { name: 'Crispy Zinger Burger', description: 'Spicy crispy chicken fillet with lettuce and mayo.', price: 590, image: 'zinger.avif' },
         ],
       },
@@ -49,7 +49,7 @@ const STORES = [
         name: 'Sides',
         items: [
           { name: 'Loaded Fries', description: 'Fries topped with cheese sauce and jalapenos.', price: 350, image: 'fries.avif', isVeg: true },
-          { name: 'Hot Wings (6 pcs)', description: 'Crispy wings tossed in spicy buffalo sauce.', price: 480, image: 'wings.avif', tags: ['Spicy'] },
+          { name: 'Hot Wings (6 pcs)', description: 'Crispy wings tossed in spicy buffalo sauce.', price: 480, image: 'wings.jpg', tags: ['Spicy'] },
         ],
       },
       {
@@ -87,7 +87,7 @@ const STORES = [
       {
         name: 'Desserts',
         items: [
-          { name: 'Chocolate Lava Cake', description: 'Warm cake with a molten chocolate center.', price: 380, image: 'cake.avif', isVeg: true },
+          { name: 'Chocolate Lava Cake', description: 'Warm cake with a molten chocolate center.', price: 380, image: 'lava-cake.jpg', isVeg: true },
         ],
       },
     ],
@@ -100,12 +100,12 @@ const STORES = [
     city: 'Karachi',
     openingHours: '12:00 PM - 11:30 PM',
     rating: 4.8,
-    coverImage: img('biryani.avif'),
+    coverImage: img('biryani.jpg'),
     categories: [
       {
         name: 'Rice',
         items: [
-          { name: 'Chicken Biryani', description: 'Aromatic basmati rice layered with spiced chicken.', price: 450, image: 'biryani.avif', tags: ['Bestseller'] },
+          { name: 'Chicken Biryani', description: 'Aromatic basmati rice layered with spiced chicken.', price: 450, image: 'biryani.jpg', tags: ['Bestseller'] },
         ],
       },
       {
@@ -145,7 +145,7 @@ const STORES = [
         name: 'Drinks',
         items: [
           { name: 'Fresh Orange Juice', description: 'Freshly squeezed, no added sugar.', price: 280, image: 'juice.avif', isVeg: true },
-          { name: 'Oreo Shake', description: 'Creamy vanilla shake blended with Oreo cookies.', price: 450, image: 'shake.avif', isVeg: true },
+          { name: 'Oreo Shake', description: 'Creamy vanilla shake blended with Oreo cookies.', price: 450, image: 'oreo-shake.jpg', isVeg: true },
         ],
       },
     ],
