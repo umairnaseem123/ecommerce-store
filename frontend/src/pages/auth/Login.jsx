@@ -18,45 +18,32 @@ const Login = () => {
       await login(email, password);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      setError(err.response?.data?.message || 'Login failed. Check your email and password.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-sm bg-white p-8 rounded-xl shadow">
-        <h1 className="text-2xl font-semibold mb-6 text-center">Sign in</h1>
-        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black"
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black"
-          />
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-black text-white rounded-lg py-2 font-medium hover:bg-gray-800 transition disabled:opacity-50"
-          >
+    <div className="auth-wrap">
+      <div className="auth-card fade-in">
+        <h1>Welcome back</h1>
+        <p className="sub">Sign in to order from your favourite stores.</p>
+        {error && <div className="auth-error">{error}</div>}
+        <form onSubmit={handleSubmit}>
+          <div className="field">
+            <label className="input-label" htmlFor="email">Email</label>
+            <input id="email" type="email" className="input-field" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          </div>
+          <div className="field">
+            <label className="input-label" htmlFor="password">Password</label>
+            <input id="password" type="password" className="input-field" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          </div>
+          <button type="submit" disabled={loading} className="btn btn-primary" style={{ width: '100%', padding: 13 }}>
             {loading ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
-        <p className="text-sm text-center mt-4 text-gray-500">
-          Don't have an account? <Link to="/register" className="text-black font-medium">Register</Link>
-        </p>
+        <p className="auth-alt">New here? <Link to="/register">Create an account</Link></p>
       </div>
     </div>
   );

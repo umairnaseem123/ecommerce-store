@@ -56,7 +56,7 @@ const Dashboard = () => {
       {/* Hero */}
       <div
         style={{
-          background: 'linear-gradient(135deg, var(--color-primary) 0%, #fb923c 100%)',
+          background: 'var(--color-primary-dark)',
           color: '#fff',
           padding: '56px 20px',
           textAlign: 'center',
