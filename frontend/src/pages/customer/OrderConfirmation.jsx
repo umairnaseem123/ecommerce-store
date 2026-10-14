@@ -5,6 +5,14 @@ import Spinner from '../../components/Spinner';
 import StatusBadge from '../../components/StatusBadge';
 import EmptyState from '../../components/EmptyState';
 
+const STEPS = [
+  ['pending', 'Order placed'],
+  ['confirmed', 'Confirmed by the store'],
+  ['preparing', 'Preparing your food'],
+  ['out_for_delivery', 'Out for delivery'],
+  ['delivered', 'Delivered'],
+];
+
 const OrderConfirmation = () => {
   const { id } = useParams();
   const [order, setOrder] = useState(null);
@@ -12,7 +20,7 @@ const OrderConfirmation = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchOrder = async () => {
+    (async () => {
       try {
         const data = await getOrderById(id);
         setOrder(data.order);
@@ -21,68 +29,77 @@ const OrderConfirmation = () => {
       } finally {
         setLoading(false);
       }
-    };
-    fetchOrder();
+    })();
   }, [id]);
 
   if (loading) return <Spinner label="Loading order..." />;
-  if (error) return <div className="page-container-narrow"><EmptyState icon="⚠️" title="Error" subtitle={error} /></div>;
+  if (error) return <div className="ds-container" style={{ maxWidth: 720, paddingBlock: 'var(--s-7)' }}><EmptyState icon="⚠️" title="Error" subtitle={error} /></div>;
 
   const total = order.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const current = STEPS.findIndex(([key]) => key === order.status);
+  const cancelled = order.status === 'cancelled';
+  const justPlaced = order.status === 'pending';
+  const addr = order.deliveryAddress;
 
   return (
-    <div className="page-container-narrow fade-in">
-      <div style={{ textAlign: 'center', marginBottom: 28 }}>
-        <div style={{ fontSize: 56 }}>🎉</div>
-        <h1 style={{ fontSize: 24, fontWeight: 800, margin: '8px 0 4px', color: 'var(--color-success)' }}>
-          Order Placed Successfully!
-        </h1>
-        <p style={{ color: 'var(--color-text-muted)', margin: 0 }}>
-          Thanks for your order — the restaurant has been notified.
-        </p>
-      </div>
-
-      <div className="card" style={{ padding: 20, marginBottom: 16 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-          <span style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Order ID</span>
-          <StatusBadge status={order.status} />
+    <div className="theme-tracking fade-in">
+      <div className="ds-container" style={{ maxWidth: 960, paddingBlock: 'var(--s-7)' }}>
+        <div style={{ textAlign: 'center', marginBottom: 'var(--s-6)' }}>
+          {justPlaced && <div className="ds-success" aria-hidden="true">✓</div>}
+          <h1 style={{ fontSize: 'var(--fs-xl)', margin: '12px 0 6px' }}>
+            {justPlaced ? 'Order placed successfully!' : 'Your order'}
+          </h1>
+          <p className="ds-rcard__meta" style={{ margin: '0 auto' }}>
+            {justPlaced ? 'Thanks for your order. The store has been notified.' : `Order #${String(order._id).slice(-6).toUpperCase()}`}
+          </p>
         </div>
-        <p style={{ margin: 0, fontFamily: 'monospace', fontSize: 13, color: 'var(--color-text-muted)' }}>
-          #{order._id}
-        </p>
-      </div>
 
-      <div className="card" style={{ padding: 20, marginBottom: 16 }}>
-        <h3 style={{ marginTop: 0, marginBottom: 12, fontSize: 15 }}>Items</h3>
-        {order.items.map((item, idx) => (
-          <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, marginBottom: 6 }}>
-            <span>{item.name} × {item.quantity}</span>
-            <span style={{ fontWeight: 600 }}>Rs. {item.price * item.quantity}</span>
+        <div className="ds-cart">
+          <div style={{ display: 'grid', gap: 'var(--s-4)' }}>
+            <section className="ds-card ds-card--pad">
+              <div className="ds-rcard__row" style={{ marginBottom: 'var(--s-4)' }}>
+                <h3>Order status</h3>
+                <StatusBadge status={order.status} />
+              </div>
+              {cancelled ? (
+                <p className="ds-alert">This order was cancelled.</p>
+              ) : (
+                <ol className="ds-steps">
+                  {STEPS.map(([key, label], i) => (
+                    <li key={key} className={`ds-step ${i < current ? 'is-done' : ''} ${i === current ? 'is-current is-done' : ''}`}>
+                      {label}
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </section>
+
+            <section className="ds-card ds-card--pad">
+              <h3 style={{ marginBottom: 'var(--s-4)' }}>Items</h3>
+              <div className="ds-lines">
+                {order.items.map((item, idx) => (
+                  <div key={idx} className="ds-line" style={{ color: 'var(--text)' }}>
+                    <span>{item.name} × {item.quantity}</span>
+                    <span style={{ fontWeight: 600 }}>Rs. {item.price * item.quantity}</span>
+                  </div>
+                ))}
+                <div className="ds-line ds-line--total"><span>Total</span><span>Rs. {total}</span></div>
+              </div>
+            </section>
           </div>
-        ))}
-        <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 10, marginTop: 10, borderTop: '1px solid var(--color-border)', fontWeight: 800, fontSize: 16 }}>
-          <span>Total</span>
-          <span>Rs. {total}</span>
+
+          <aside className="ds-card ds-card--pad ds-cart__summary">
+            <h3 style={{ marginBottom: 'var(--s-3)' }}>Delivery address</h3>
+            <p className="ds-rcard__meta" style={{ margin: 0 }}>
+              {addr?.street}, {addr?.city}, {addr?.state} {addr?.zip}
+            </p>
+            <h3 style={{ margin: 'var(--s-5) 0 var(--s-3)' }}>Payment</h3>
+            <p className="ds-rcard__meta" style={{ margin: 0, textTransform: 'capitalize' }}>{order.paymentMethod}</p>
+            <p className="ds-rcard__meta" style={{ margin: 'var(--s-5) 0 0', wordBreak: 'break-all' }}>Order ID: #{order._id}</p>
+            <Link to="/my-orders" className="ds-btn ds-btn--block" style={{ marginTop: 'var(--s-5)' }}>Track order</Link>
+            <Link to="/restaurants" className="ds-btn ds-btn--ghost ds-btn--block" style={{ marginTop: 'var(--s-3)' }}>Order more</Link>
+          </aside>
         </div>
-      </div>
-
-      <div className="card" style={{ padding: 20, marginBottom: 24 }}>
-        <h3 style={{ marginTop: 0, marginBottom: 10, fontSize: 15 }}>📍 Delivery Address</h3>
-        <p style={{ margin: 0, fontSize: 14, color: 'var(--color-text-muted)' }}>
-          {order.deliveryAddress?.street}, {order.deliveryAddress?.city}, {order.deliveryAddress?.state} {order.deliveryAddress?.zip}
-        </p>
-        <p style={{ margin: '10px 0 0', fontSize: 14, color: 'var(--color-text-muted)' }}>
-          💳 Payment: <strong style={{ color: 'var(--color-text)', textTransform: 'capitalize' }}>{order.paymentMethod}</strong>
-        </p>
-      </div>
-
-      <div style={{ display: 'flex', gap: 12 }}>
-        <Link to="/restaurants" className="btn btn-outline" style={{ flex: 1, textAlign: 'center' }}>
-          ← Order More
-        </Link>
-        <Link to="/my-orders" className="btn btn-primary" style={{ flex: 1, textAlign: 'center' }}>
-          Track Order
-        </Link>
       </div>
     </div>
   );

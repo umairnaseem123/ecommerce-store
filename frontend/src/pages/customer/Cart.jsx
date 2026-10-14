@@ -5,11 +5,6 @@ import { getRestaurantById } from '../../api/restaurantApi';
 import Spinner from '../../components/Spinner';
 import EmptyState from '../../components/EmptyState';
 
-const qtyBtn = {
-  width: 28, height: 28, borderRadius: 6, border: '1px solid var(--color-border)',
-  background: '#fff', cursor: 'pointer', fontWeight: 700,
-};
-
 const Cart = () => {
   const { cart, loading, updateItem, removeItem, emptyCart } = useCart();
   const navigate = useNavigate();
@@ -34,62 +29,65 @@ const Cart = () => {
 
   if (!cart || cart.items.length === 0) {
     return (
-      <div className="page-container-narrow">
-        <EmptyState
-          icon="🛒"
-          title="Your cart is empty"
-          subtitle="Looks like you haven't added anything yet."
-          action={<Link to="/restaurants" className="btn btn-primary" style={{ marginTop: 16 }}>Browse Stores</Link>}
-        />
+      <div className="theme-checkout">
+        <div className="ds-container" style={{ maxWidth: 720, paddingBlock: 'var(--s-7)' }}>
+          <EmptyState
+            icon="🛒"
+            title="Your cart is empty"
+            subtitle="Looks like you haven't added anything yet."
+            action={<Link to="/restaurants" className="ds-btn" style={{ marginTop: 16 }}>Browse stores</Link>}
+          />
+        </div>
       </div>
     );
   }
 
   const total = cart.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const count = cart.items.reduce((sum, i) => sum + i.quantity, 0);
 
   return (
-    <div className="page-container-narrow fade-in">
-      <h1 style={{ fontSize: 26, fontWeight: 800, marginBottom: 4 }}>Your Cart</h1>
-      <p style={{ color: 'var(--color-text-muted)', marginTop: 0, marginBottom: 24 }}>
-        Ordering from <strong style={{ color: 'var(--color-text)' }}>{storeName || 'your store'}</strong>
-        {storeId && <> · <Link to={`/restaurant/${storeId}`} style={{ color: 'var(--color-primary)', fontWeight: 600 }}>Add more items</Link></>}
-      </p>
+    <div className="theme-checkout fade-in">
+      <div className="ds-container" style={{ paddingBlock: 'var(--s-7)' }}>
+        <h1 style={{ fontSize: 'var(--fs-xl)' }}>Your cart</h1>
+        <p className="ds-rcard__meta" style={{ margin: '6px 0 var(--s-5)' }}>
+          Ordering from <strong style={{ color: 'var(--text)' }}>{storeName || 'your store'}</strong>
+          {storeId && <> · <Link to={`/restaurant/${storeId}`} className="ds-link">Add more items</Link></>}
+        </p>
 
-      <div style={{ display: 'grid', gap: 12, marginBottom: 24 }}>
-        {cart.items.map((item) => (
-          <div key={item.menuItem} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 16, gap: 12 }}>
-            <div style={{ flex: 1 }}>
-              <h4 style={{ margin: 0, fontSize: 15 }}>{item.name}</h4>
-              <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--color-text-muted)' }}>Rs. {item.price} each</p>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <button aria-label="Decrease quantity" onClick={() => updateItem(item.menuItem, Math.max(1, item.quantity - 1))} style={qtyBtn}>−</button>
-              <span style={{ minWidth: 20, textAlign: 'center', fontWeight: 700 }}>{item.quantity}</span>
-              <button aria-label="Increase quantity" onClick={() => updateItem(item.menuItem, item.quantity + 1)} style={qtyBtn}>+</button>
-            </div>
-            <p style={{ width: 80, textAlign: 'right', fontWeight: 700, margin: 0 }}>Rs. {item.price * item.quantity}</p>
-            <button onClick={() => removeItem(item.menuItem)} style={{ background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
-              Remove
-            </button>
+        <div className="ds-cart">
+          <div style={{ display: 'grid', gap: 'var(--s-3)' }}>
+            {cart.items.map((item) => (
+              <div key={item.menuItem} className="ds-card ds-cart__row">
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <h4 style={{ margin: 0, fontSize: '1rem' }}>{item.name}</h4>
+                  <p className="ds-rcard__meta" style={{ margin: '4px 0 0' }}>Rs. {item.price} each</p>
+                </div>
+                <div className="ds-qty">
+                  <button aria-label="Decrease quantity" onClick={() => updateItem(item.menuItem, Math.max(1, item.quantity - 1))}>−</button>
+                  <span>{item.quantity}</span>
+                  <button aria-label="Increase quantity" onClick={() => updateItem(item.menuItem, item.quantity + 1)}>+</button>
+                </div>
+                <strong className="ds-cart__line">Rs. {item.price * item.quantity}</strong>
+                <button className="ds-cart__remove" onClick={() => removeItem(item.menuItem)}>Remove</button>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      <div className="card" style={{ padding: 20 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 14, color: 'var(--color-text-muted)' }}>
-          <span>Subtotal</span><span>Rs. {total}</span>
+          <aside className="ds-card ds-card--pad ds-cart__summary">
+            <h3 style={{ marginBottom: 'var(--s-4)' }}>Order summary</h3>
+            <div className="ds-lines">
+              <div className="ds-line"><span>Items ({count})</span><span>Rs. {total}</span></div>
+              <div className="ds-line"><span>Delivery fee</span><span style={{ color: 'var(--green-500)', fontWeight: 700 }}>Free</span></div>
+              <div className="ds-line ds-line--total"><span>Total</span><span>Rs. {total}</span></div>
+            </div>
+            <button onClick={() => navigate('/checkout')} className="ds-btn ds-btn--block" style={{ marginTop: 'var(--s-5)' }}>
+              Proceed to checkout
+            </button>
+            <button onClick={emptyCart} className="ds-btn ds-btn--ghost ds-btn--block" style={{ marginTop: 'var(--s-3)' }}>
+              Clear cart
+            </button>
+          </aside>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, fontSize: 14, color: 'var(--color-text-muted)' }}>
-          <span>Delivery Fee</span><span>Free</span>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 12, borderTop: '1px solid var(--color-border)', fontSize: 18, fontWeight: 800 }}>
-          <span>Total</span><span>Rs. {total}</span>
-        </div>
-      </div>
-
-      <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
-        <button onClick={emptyCart} className="btn btn-outline" style={{ flex: 1 }}>Clear Cart</button>
-        <button onClick={() => navigate('/checkout')} className="btn btn-primary" style={{ flex: 2 }}>Proceed to Checkout →</button>
       </div>
     </div>
   );

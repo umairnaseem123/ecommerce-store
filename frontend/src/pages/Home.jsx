@@ -2,10 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { getRestaurants } from '../api/restaurantApi';
 import { useAuth } from '../context/AuthContext';
-import SmartImage from '../components/SmartImage';
 import Spinner from '../components/Spinner';
-import '../styles/store.css';
-import '../styles/hero.css';
+import StoreCard from '../components/StoreCard';
 
 const Home = () => {
   const { user, loading: authLoading } = useAuth();
@@ -18,11 +16,11 @@ const Home = () => {
   useEffect(() => {
     getRestaurants()
       .then((d) => setStores(d.restaurants || []))
-      .catch(() => setStores([]))
+     .catch((e) => { console.error('STORES ERROR:', e); setStores([]); })
       .finally(() => setLoading(false));
   }, []);
 
-  // Optional banner photo: put hero.jpg (or hero.avif) in public/images and it is used automatically.
+  // Optional banner photo: hero.jpg / hero.avif in public/images is used automatically.
   useEffect(() => {
     const names = ['hero.jpg', 'hero.avif'];
     const tryLoad = (i) => {
@@ -46,84 +44,79 @@ const Home = () => {
   };
 
   return (
-    <div className="fade-in">
-      <section
-        className={`hero ${hero ? 'has-photo' : ''}`}
-        style={hero ? { backgroundImage: `linear-gradient(90deg, rgba(14,52,36,.94) 0%, rgba(14,52,36,.78) 45%, rgba(14,52,36,.2) 100%), url(${hero})` } : undefined}
-      >
-        <div className="hero-inner">
+    <div className="theme-home fade-in">
+      <section className="ds-hero">
+        <div className="ds-container ds-hero__in">
           <div>
-            <h1>Hungry? Get your <span>favourite food</span> delivered fast.</h1>
-            <p>Browse stores, pick what you love, and order in a few clicks.</p>
-            <form className="hero-search" onSubmit={onSearch}>
-              <input
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Search stores or cuisines (e.g. Pizza, BBQ)"
-              />
-              <button className="btn btn-primary" type="submit">Search</button>
+            <h1>Hungry? Get your favourite food delivered fast.</h1>
+            <p style={{ margin: '16px 0 28px', color: 'var(--ink-700)', fontSize: '1.1rem' }}>
+              Browse stores, pick what you love, and order in a few clicks.
+            </p>
+            <form className="ds-search" onSubmit={onSearch}>
+              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search stores or cuisines (e.g. Pizza, BBQ)" />
+              <button className="ds-btn" type="submit">Find food</button>
             </form>
-            <div className="hero-stats">
-              <div><b>{stores.length}</b>Stores</div>
-              <div><b>Free</b>Delivery</div>
-              <div><b>Cash</b>or card</div>
+            <div className="ds-stats">
+              <div><b>{stores.length}</b><span>Stores</span></div>
+              <div><b>Free</b><span>Delivery</span></div>
+              <div><b>Cash</b><span>or card</span></div>
             </div>
           </div>
-          <div className="hero-art" aria-hidden="true">
-            <img className="tall" src="/images/pizza.avif" alt="" />
-            <img src="/images/icecream.avif" alt="" />
-            <img src="/images/shake.avif" alt="" />
-          </div>
+          <img className="ds-hero__img" src={hero || '/images/pizza.avif'} alt="" />
         </div>
       </section>
 
       {cuisines.length > 0 && (
-        <section className="section">
-          <div className="section-head"><h2>Browse by cuisine</h2></div>
-          <div className="chips">
+        <section className="ds-container ds-section" style={{ paddingBottom: 0 }}>
+          <div className="ds-section-head"><h2>Browse by cuisine</h2></div>
+          <div className="ds-chips">
             {cuisines.map((c) => (
-              <Link key={c} to={`/restaurants?cuisine=${encodeURIComponent(c)}`} className="chip">{c}</Link>
+              <Link key={c} to={`/restaurants?cuisine=${encodeURIComponent(c)}`} className="ds-chip">{c}</Link>
             ))}
           </div>
         </section>
       )}
 
-      <section className="section">
-        <div className="section-head">
+      <section className="ds-container ds-section">
+        <div className="ds-section-head">
           <h2>Popular stores</h2>
-          <Link to="/restaurants">View all</Link>
+          <Link to="/restaurants" className="ds-link">View all</Link>
         </div>
-        {loading ? (
-          <Spinner label="Loading stores..." />
-        ) : (
-          <div className="store-grid">
-            {stores.slice(0, 4).map((s) => (
-              <Link key={s._id} to={`/restaurant/${s._id}`} className="card card-hover store-card">
-                <SmartImage src={s.coverImage} alt={s.name} className="store-cover" style={{ height: 170 }} fallback="🍽" />
-                <div className="store-body">
-                  <div className="store-title">
-                    <h3>{s.name}</h3>
-                    {s.rating > 0 && <span className="rating">{s.rating} ★</span>}
-                  </div>
-                  <p className="store-meta">{s.description}</p>
-                  {s.cuisine?.map((c) => <span className="tag" key={c}>{c}</span>)}
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
+        <div className="ds-grid">
+          {loading
+            ? [...Array(4)].map((_, i) => <div key={i} className="ds-skeleton ds-skeleton--card" />)
+            : stores.slice(0, 4).map((s) => <StoreCard key={s._id} store={s} />)}
+        </div>
       </section>
 
-      <section className="section" style={{ paddingBottom: 56 }}>
-        <div className="section-head"><h2>How it works</h2></div>
-        <div className="steps">
-          <div className="card step"><div className="step-num">1</div><h4>Pick a store</h4><p>Browse stores and menus with photos and prices.</p></div>
-          <div className="card step"><div className="step-num">2</div><h4>Add to cart</h4><p>Choose items, change quantities and review your total.</p></div>
-          <div className="card step"><div className="step-num">3</div><h4>Place your order</h4><p>Checkout and track the status from My Orders.</p></div>
+      <section className="ds-container" style={{ paddingBottom: 'var(--s-7)' }}>
+        <div className="ds-promo">
+          <div>
+            <h2 style={{ color: '#fff' }}>Free delivery on every order</h2>
+            <p style={{ margin: '8px 0 0' }}>Pick a store, fill your cart and we bring it to your door.</p>
+          </div>
+          <Link to="/restaurants" className="ds-btn">Order now</Link>
+        </div>
+      </section>
+
+      <section className="ds-container ds-section" style={{ paddingTop: 0 }}>
+        <div className="ds-section-head"><h2>How it works</h2></div>
+        <div className="ds-grid">
+          {[
+            ['Pick a store', 'Browse stores and menus with photos and prices.'],
+            ['Add to cart', 'Choose items, change quantities and review your total.'],
+            ['Place your order', 'Checkout and track the status from My Orders.'],
+          ].map(([t, d], i) => (
+            <div key={t} className="ds-card ds-card--pad">
+              <span className="ds-badge ds-badge--offer">{i + 1}</span>
+              <h3 style={{ margin: '12px 0 6px' }}>{t}</h3>
+              <p className="ds-rcard__meta" style={{ margin: 0 }}>{d}</p>
+            </div>
+          ))}
         </div>
         {!user && (
-          <div style={{ textAlign: 'center', marginTop: 28 }}>
-            <Link to="/register" className="btn btn-primary">Create a free account</Link>
+          <div style={{ textAlign: 'center', marginTop: 'var(--s-6)' }}>
+            <Link to="/register" className="ds-btn">Create a free account</Link>
           </div>
         )}
       </section>
