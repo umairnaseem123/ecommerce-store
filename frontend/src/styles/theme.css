@@ -1,4 +1,4 @@
-﻿/* ==========================================================
+/* ==========================================================
    Food Store design system  -  frontend/src/styles/theme.css
    Palette: cream + orange + charcoal, with per-page variants
    Classes are prefixed "ds-" so they never clash with old CSS
@@ -274,7 +274,7 @@ a.ds-chip { text-decoration: none; }
 .ds-banner { background-size: cover; background-position: center; background-color: var(--orange-500); color: #fff; }
 .ds-back { color: #fff; opacity: .9; text-decoration: none; font-size: var(--fs-sm); }
 .ds-banner__meta { display: flex; gap: var(--s-4); flex-wrap: wrap; align-items: center; margin-top: var(--s-3); font-size: var(--fs-sm); }
-.ds-filterbar { position: sticky; top: 58px; z-index: 40; background: var(--surface); border-bottom: 1px solid var(--line); }
+.ds-filterbar { position: sticky; top: 68px; z-index: 40; background: var(--surface); border-bottom: 1px solid var(--line); }
 .ds-filterbar__in { display: flex; gap: var(--s-4); align-items: center; flex-wrap: wrap; padding-block: var(--s-3); }
 .ds-check { display: flex; align-items: center; gap: 6px; font-size: var(--fs-sm); font-weight: 600; }
 .ds-menu-grid { display: grid; gap: var(--s-4); grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); }
@@ -284,21 +284,25 @@ a.ds-chip { text-decoration: none; }
 .ds-veg.is-nonveg { color: var(--red-500); }
 .ds-dish__img { background: var(--beige-100); display: grid; place-items: center; font-size: 2.5rem; }
 @media (max-width: 480px) { .ds-menu-grid { grid-template-columns: 1fr; } }
-/* Mobile overflow fix */
-html, body { overflow-x: clip; }
 
-@media (max-width: 600px) {
+/* cart */
+.ds-cart { display: grid; grid-template-columns: 1fr 360px; gap: var(--s-5); align-items: start; }
+.ds-cart__summary { position: sticky; top: 90px; }
+.ds-cart__row { display: flex; align-items: center; gap: var(--s-4); padding: var(--s-4); }
+.ds-cart__line { min-width: 84px; text-align: right; }
+.ds-cart__remove { background: none; border: 0; color: var(--red-500); font: 600 var(--fs-sm) var(--font-body); cursor: pointer; }
+@media (max-width: 860px) {
+  .ds-cart { grid-template-columns: 1fr; }
+  .ds-cart__summary { position: static; }
+  .ds-cart__row { flex-wrap: wrap; }
 }
 
-/* Mobile overflow fix */
+/* mobile overflow fix */
+#root { width: 100%; max-width: 100%; min-width: 0; }
+#root > * { min-width: 0; max-width: 100%; }
 .ds-hero__in > * { min-width: 0; }
-.ds-hero h1 { font-size: clamp(2rem, 9vw, 2.6rem); overflow-wrap: anywhere; }
-.ds-search { max-width: 100%; box-sizing: border-box; }
-.ds-search input { min-width: 0; flex: 1; }
-.ds-search button { flex-shrink: 0; padding-inline: 14px; }
-
-/* Hero layout: two columns on desktop, one on mobile */
-.ds-hero__in { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
-@media (max-width: 900px) {
+.ds-hero__img { max-width: 100%; height: auto; }
+@media (max-width: 860px) {
   .ds-hero__in { grid-template-columns: minmax(0, 1fr); }
+  .ds-hero__img { aspect-ratio: 16 / 10; }
 }
