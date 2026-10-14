@@ -1,14 +1,14 @@
-const statusColors = {
-  pending: 'var(--color-warning)',
-  confirmed: 'var(--color-info)',
-  preparing: 'var(--color-purple)',
-  out_for_delivery: 'var(--color-cyan)',
-  delivered: 'var(--color-success)',
-  cancelled: 'var(--color-danger)',
+const variant = {
+  pending: 'placed',
+  confirmed: 'placed',
+  preparing: 'preparing',
+  out_for_delivery: 'onway',
+  delivered: 'delivered',
+  cancelled: 'cancelled',
 };
 
-const StatusBadge = ({ status }) => (
-  <span className="badge" style={{ background: statusColors[status] || '#888' }}>
+const StatusBadge = ({ status = '' }) => (
+  <span className={`ds-status ds-status--${variant[status] || 'placed'}`} style={{ textTransform: 'capitalize' }}>
     {status.replace(/_/g, ' ')}
   </span>
 );

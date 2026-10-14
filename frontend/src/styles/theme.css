@@ -297,12 +297,19 @@ a.ds-chip { text-decoration: none; }
   .ds-cart__row { flex-wrap: wrap; }
 }
 
-/* mobile overflow fix */
-#root { width: 100%; max-width: 100%; min-width: 0; }
-#root > * { min-width: 0; max-width: 100%; }
-.ds-hero__in > * { min-width: 0; }
-.ds-hero__img { max-width: 100%; height: auto; }
-@media (max-width: 860px) {
-  .ds-hero__in { grid-template-columns: minmax(0, 1fr); }
-  .ds-hero__img { aspect-ratio: 16 / 10; }
-}
+/* checkout + orders */
+.ds-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-3); }
+.ds-sr { position: absolute; opacity: 0; pointer-events: none; }
+.ds-pay { position: relative; display: flex; align-items: center; gap: var(--s-3); padding: var(--s-3) var(--s-4); border: 2px solid var(--line); border-radius: var(--r-md); background: var(--surface); cursor: pointer; transition: border-color .15s, background .15s; }
+.ds-pay:hover { border-color: var(--accent); }
+.ds-pay.is-active { border-color: var(--accent); background: var(--accent-soft); }
+.ds-pay:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+.ds-alert { margin: 0; padding: 12px 14px; border-radius: var(--r-sm); background: var(--red-100); color: var(--red-500); font-size: var(--fs-sm); font-weight: 600; }
+.ds-order { display: grid; gap: var(--s-3); padding: var(--s-5); text-decoration: none; color: inherit; transition: transform .2s var(--ease), box-shadow .2s var(--ease); }
+.ds-order:hover { transform: translateY(-3px); box-shadow: var(--shadow-pop); }
+.ds-order__items { display: flex; flex-wrap: wrap; gap: 6px 14px; padding-block: var(--s-3); border-block: 1px dashed var(--line); color: var(--muted); font-size: var(--fs-sm); }
+@media (max-width: 480px) { .ds-form-row { grid-template-columns: 1fr; } }
+
+/* order confirmation */
+.ds-success { width: 72px; height: 72px; margin: 0 auto; border-radius: 50%; background: var(--green-500); color: #fff; display: grid; place-items: center; font-size: 2.2rem; font-weight: 800; box-shadow: 0 0 0 10px var(--green-100); animation: ds-pop .4s var(--ease); }
+@keyframes ds-pop { from { transform: scale(.6); opacity: 0; } }
