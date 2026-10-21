@@ -3,7 +3,19 @@ import { useCart } from '../../context/CartContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { getRestaurantById } from '../../api/restaurantApi';
 import Spinner from '../../components/Spinner';
-import EmptyState from '../../components/EmptyState';
+import '../../styles/cart-chop.css';
+
+const CartIcon = ({ size = 32 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="9" cy="20" r="1.5" /><circle cx="18" cy="20" r="1.5" /><path d="M2 3h3l2.6 11.4a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 7H6" />
+  </svg>
+);
+
+const TrashIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5" />
+  </svg>
+);
 
 const Cart = () => {
   const { cart, loading, updateItem, removeItem, emptyCart } = useCart();
@@ -29,14 +41,14 @@ const Cart = () => {
 
   if (!cart || cart.items.length === 0) {
     return (
-      <div className="theme-checkout">
-        <div className="ds-container" style={{ maxWidth: 720, paddingBlock: 'var(--s-7)' }}>
-          <EmptyState
-            icon="🛒"
-            title="Your cart is empty"
-            subtitle="Looks like you haven't added anything yet."
-            action={<Link to="/restaurants" className="ds-btn" style={{ marginTop: 16 }}>Browse stores</Link>}
-          />
+      <div className="cc-page">
+        <div className="cc-wrap">
+          <div className="cc-card cc-empty">
+            <div className="cc-empty__icon"><CartIcon /></div>
+            <h2>Your cart is empty</h2>
+            <p>Pick a restaurant and add your favourite dishes.</p>
+            <Link to="/restaurants" className="cc-btn cc-btn--auto">Browse restaurants</Link>
+          </div>
         </div>
       </div>
     );
@@ -46,46 +58,44 @@ const Cart = () => {
   const count = cart.items.reduce((sum, i) => sum + i.quantity, 0);
 
   return (
-    <div className="theme-checkout fade-in">
-      <div className="ds-container" style={{ paddingBlock: 'var(--s-7)' }}>
-        <h1 style={{ fontSize: 'var(--fs-xl)' }}>Your cart</h1>
-        <p className="ds-rcard__meta" style={{ margin: '6px 0 var(--s-5)' }}>
-          Ordering from <strong style={{ color: 'var(--text)' }}>{storeName || 'your store'}</strong>
-          {storeId && <> · <Link to={`/restaurant/${storeId}`} className="ds-link">Add more items</Link></>}
+    <div className="cc-page">
+      <div className="cc-wrap">
+        <h1>Your cart</h1>
+        <p className="cc-sub">
+          Ordering from <strong>{storeName || 'your restaurant'}</strong>
+          {storeId && <> | <Link to={`/restaurant/${storeId}`} className="cc-link">Add more items</Link></>}
         </p>
 
-        <div className="ds-cart">
-          <div style={{ display: 'grid', gap: 'var(--s-3)' }}>
+        <div className="cc-layout">
+          <div className="cc-rows">
             {cart.items.map((item) => (
-              <div key={item.menuItem} className="ds-card ds-cart__row">
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <h4 style={{ margin: 0, fontSize: '1rem' }}>{item.name}</h4>
-                  <p className="ds-rcard__meta" style={{ margin: '4px 0 0' }}>Rs. {item.price} each</p>
+              <div key={item.menuItem} className="cc-card cc-row">
+                <div className="cc-row__info">
+                  <h4>{item.name}</h4>
+                  <p>Rs. {item.price} each</p>
                 </div>
-                <div className="ds-qty">
-                  <button aria-label="Decrease quantity" onClick={() => updateItem(item.menuItem, Math.max(1, item.quantity - 1))}>−</button>
+                <div className="cc-qty">
+                  <button type="button" aria-label="Decrease quantity" onClick={() => updateItem(item.menuItem, Math.max(1, item.quantity - 1))}>-</button>
                   <span>{item.quantity}</span>
-                  <button aria-label="Increase quantity" onClick={() => updateItem(item.menuItem, item.quantity + 1)}>+</button>
+                  <button type="button" aria-label="Increase quantity" onClick={() => updateItem(item.menuItem, item.quantity + 1)}>+</button>
                 </div>
-                <strong className="ds-cart__line">Rs. {item.price * item.quantity}</strong>
-                <button className="ds-cart__remove" onClick={() => removeItem(item.menuItem)}>Remove</button>
+                <strong className="cc-row__total">Rs. {item.price * item.quantity}</strong>
+                <button type="button" className="cc-remove" aria-label={`Remove ${item.name}`} onClick={() => removeItem(item.menuItem)}>
+                  <TrashIcon />
+                </button>
               </div>
             ))}
           </div>
 
-          <aside className="ds-card ds-card--pad ds-cart__summary">
-            <h3 style={{ marginBottom: 'var(--s-4)' }}>Order summary</h3>
-            <div className="ds-lines">
-              <div className="ds-line"><span>Items ({count})</span><span>Rs. {total}</span></div>
-              <div className="ds-line"><span>Delivery fee</span><span style={{ color: 'var(--green-500)', fontWeight: 700 }}>Free</span></div>
-              <div className="ds-line ds-line--total"><span>Total</span><span>Rs. {total}</span></div>
+          <aside className="cc-card cc-card--pad cc-summary">
+            <h3>Order summary</h3>
+            <div className="cc-lines">
+              <div className="cc-line"><span>Items ({count})</span><span>Rs. {total}</span></div>
+              <div className="cc-line"><span>Delivery fee</span><span className="cc-free">Free</span></div>
+              <div className="cc-line cc-line--total"><span>Total</span><span>Rs. {total}</span></div>
             </div>
-            <button onClick={() => navigate('/checkout')} className="ds-btn ds-btn--block" style={{ marginTop: 'var(--s-5)' }}>
-              Proceed to checkout
-            </button>
-            <button onClick={emptyCart} className="ds-btn ds-btn--ghost ds-btn--block" style={{ marginTop: 'var(--s-3)' }}>
-              Clear cart
-            </button>
+            <button type="button" onClick={() => navigate('/checkout')} className="cc-btn">Proceed to checkout</button>
+            <button type="button" onClick={emptyCart} className="cc-btn cc-btn--ghost">Clear cart</button>
           </aside>
         </div>
       </div>

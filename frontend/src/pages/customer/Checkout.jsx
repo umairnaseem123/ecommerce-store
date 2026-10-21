@@ -1,9 +1,26 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { createOrder } from '../../api/orderApi';
 import Spinner from '../../components/Spinner';
-import EmptyState from '../../components/EmptyState';
+import '../../styles/cart-chop.css';
+
+const svg = { width: 26, height: 26, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true };
+
+const CashIcon = () => (
+  <svg {...svg}><rect x="2" y="6" width="20" height="12" rx="2" /><circle cx="12" cy="12" r="2.5" /><path d="M6 12h.01M18 12h.01" /></svg>
+);
+const CardIcon = () => (
+  <svg {...svg}><rect x="2" y="5" width="20" height="14" rx="2" /><path d="M2 10h20M6 15h4" /></svg>
+);
+const CartIcon = () => (
+  <svg {...svg} width="32" height="32"><circle cx="9" cy="20" r="1.5" /><circle cx="18" cy="20" r="1.5" /><path d="M2 3h3l2.6 11.4a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 7H6" /></svg>
+);
+
+const PAYMENTS = [
+  { value: 'cash', label: 'Cash on delivery', hint: 'Pay when your order arrives', Icon: CashIcon },
+  { value: 'card', label: 'Card', hint: 'Pay with your card', Icon: CardIcon },
+];
 
 const Checkout = () => {
   const { cart, loading, refreshCart } = useCart();
@@ -14,7 +31,6 @@ const Checkout = () => {
   const [state, setState] = useState('');
   const [zip, setZip] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cash');
-
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -22,8 +38,15 @@ const Checkout = () => {
 
   if (!cart || cart.items.length === 0) {
     return (
-      <div className="page-container-narrow">
-        <EmptyState icon="🛒" title="Your cart is empty" subtitle="Add some items before checking out." />
+      <div className="cc-page">
+        <div className="cc-wrap">
+          <div className="cc-card cc-empty">
+            <div className="cc-empty__icon"><CartIcon /></div>
+            <h2>Your cart is empty</h2>
+            <p>Add some items before checking out.</p>
+            <Link to="/restaurants" className="cc-btn cc-btn--auto">Browse restaurants</Link>
+          </div>
+        </div>
       </div>
     );
   }
@@ -41,10 +64,7 @@ const Checkout = () => {
 
     setSubmitting(true);
     try {
-      const data = await createOrder({
-        deliveryAddress: { street, city, state, zip },
-        paymentMethod,
-      });
+      const data = await createOrder({ deliveryAddress: { street, city, state, zip }, paymentMethod });
       await refreshCart();
       navigate(`/order-confirmation/${data.order._id}`);
     } catch (err) {
@@ -54,91 +74,73 @@ const Checkout = () => {
     }
   };
 
-  return (
-    <div className="page-container-narrow fade-in">
-      <h1 style={{ fontSize: 26, fontWeight: 800, marginBottom: 20 }}>Checkout</h1>
+  const field = (label, value, set, placeholder, id) => (
+    <div>
+      <label className="cc-label" htmlFor={id}>{label}</label>
+      <input id={id} type="text" value={value} onChange={(e) => set(e.target.value)} className="cc-input" placeholder={placeholder} />
+    </div>
+  );
 
-      <div className="card" style={{ padding: 20, marginBottom: 24 }}>
-        <h3 style={{ marginTop: 0, marginBottom: 12, fontSize: 16 }}>Order Summary</h3>
-        {cart.items.map((item) => (
-          <div key={item.menuItem} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, marginBottom: 6 }}>
-            <span>{item.name} × {item.quantity}</span>
-            <span style={{ fontWeight: 600 }}>Rs. {item.price * item.quantity}</span>
-          </div>
-        ))}
-        <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 10, marginTop: 10, borderTop: '1px solid var(--color-border)', fontWeight: 800, fontSize: 16 }}>
-          <span>Total</span>
-          <span>Rs. {total}</span>
+  return (
+    <div className="cc-page">
+      <div className="cc-wrap">
+        <h1>Checkout</h1>
+        <p className="cc-sub">Confirm your address and payment to place the order.</p>
+
+        <div className="cc-layout">
+          <form id="checkout-form" onSubmit={handlePlaceOrder} className="cc-card cc-card--pad cc-form">
+            <div className="cc-fields">
+              <h3>Delivery address</h3>
+              {field('Street', street, setStreet, 'House no, street name', 'co-street')}
+              <div className="cc-two">
+                {field('City', city, setCity, 'Karachi', 'co-city')}
+                {field('State', state, setState, 'Sindh', 'co-state')}
+              </div>
+              {field('Zip code', zip, setZip, '74000', 'co-zip')}
+            </div>
+
+            <div className="cc-fields">
+              <h3>Payment method</h3>
+              <div className="cc-two">
+                {PAYMENTS.map(({ value, label, hint, Icon }) => (
+                  <label key={value} className={`cc-pay ${paymentMethod === value ? 'is-active' : ''}`}>
+                    <input
+                      className="cc-sr"
+                      type="radio"
+                      name="payment"
+                      value={value}
+                      checked={paymentMethod === value}
+                      onChange={() => setPaymentMethod(value)}
+                    />
+                    <span className="cc-pay__icon"><Icon /></span>
+                    <span><strong>{label}</strong><small>{hint}</small></span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {error && <p className="cc-alert" role="alert">{error}</p>}
+          </form>
+
+          <aside className="cc-card cc-card--pad cc-summary">
+            <h3>Order summary</h3>
+            <div className="cc-lines">
+              {cart.items.map((item) => (
+                <div key={item.menuItem} className="cc-line cc-line--ink">
+                  <span>{item.name} x {item.quantity}</span>
+                  <span>Rs. {item.price * item.quantity}</span>
+                </div>
+              ))}
+              <div className="cc-line"><span>Delivery fee</span><span className="cc-free">Free</span></div>
+              <div className="cc-line cc-line--total"><span>Total</span><span>Rs. {total}</span></div>
+            </div>
+            <button type="submit" form="checkout-form" disabled={submitting} className="cc-btn">
+              {submitting ? 'Placing order...' : `Place order - Rs. ${total}`}
+            </button>
+            <Link to="/cart" className="cc-link cc-back">Back to cart</Link>
+          </aside>
         </div>
       </div>
-
-      <form onSubmit={handlePlaceOrder} className="card" style={{ padding: 20 }}>
-        <h3 style={{ marginTop: 0, marginBottom: 16, fontSize: 16 }}>Delivery Address</h3>
-
-        <div style={{ marginBottom: 14 }}>
-          <label className="input-label">Street</label>
-          <input type="text" value={street} onChange={(e) => setStreet(e.target.value)} className="input-field" placeholder="House no, street name" />
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
-          <div>
-            <label className="input-label">City</label>
-            <input type="text" value={city} onChange={(e) => setCity(e.target.value)} className="input-field" placeholder="Karachi" />
-          </div>
-          <div>
-            <label className="input-label">State</label>
-            <input type="text" value={state} onChange={(e) => setState(e.target.value)} className="input-field" placeholder="Sindh" />
-          </div>
-        </div>
-
-        <div style={{ marginBottom: 20 }}>
-          <label className="input-label">Zip Code</label>
-          <input type="text" value={zip} onChange={(e) => setZip(e.target.value)} className="input-field" placeholder="74000" />
-        </div>
-
-        <h3 style={{ marginBottom: 12, fontSize: 16 }}>Payment Method</h3>
-        <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
-          {[
-            { value: 'cash', label: '💵 Cash on Delivery' },
-            { value: 'card', label: '💳 Card' },
-          ].map((opt) => (
-            <label
-              key={opt.value}
-              style={{
-                flex: 1,
-                border: `2px solid ${paymentMethod === opt.value ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                borderRadius: 'var(--radius-sm)',
-                padding: '12px 14px',
-                cursor: 'pointer',
-                fontSize: 14,
-                fontWeight: 600,
-                background: paymentMethod === opt.value ? 'var(--color-primary-light)' : '#fff',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-              }}
-            >
-              <input
-                type="radio"
-                name="payment"
-                value={opt.value}
-                checked={paymentMethod === opt.value}
-                onChange={() => setPaymentMethod(opt.value)}
-                style={{ display: 'none' }}
-              />
-              {opt.label}
-            </label>
-          ))}
-        </div>
-
-        {error && (
-          <p style={{ color: 'var(--color-danger)', fontSize: 14, marginBottom: 12 }}>{error}</p>
-        )}
-
-        <button type="submit" disabled={submitting} className="btn btn-primary" style={{ width: '100%', padding: '14px' }}>
-          {submitting ? 'Placing Order...' : `Place Order — Rs. ${total}`}
-        </button>
-      </form>
     </div>
   );
 };

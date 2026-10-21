@@ -1,61 +1,80 @@
-# Food Store: Multi-Restaurant Ordering Platform
+# RestaurantOS - Food Delivery App
 
-A full-stack MERN web app where customers browse several restaurants, order food, and track orders, while restaurant managers and an admin run the stores from their own dashboards.
-
-**Live demo:** [PASTE VERCEL LINK HERE]
+A full-stack food delivery platform built for the Auspify Technologies Full Stack internship. Customers browse restaurants, add dishes to a cart and place orders. Managers, kitchen staff and admins each get their own dashboard.
 
 ## Features
 
-- Browse multiple restaurants with menus split into categories
-- Cart and checkout for customers
-- Separate role-based access: customer, restaurant manager, admin
-- Manager dashboard to manage menu items and orders
-- Admin panel to oversee all stores
-- Seed script that creates demo stores, products and logins
+- Browse restaurants, search by name or cuisine, filter by category
+- Restaurant menus with categories, veg / non-veg markers and add-to-cart
+- Cart, checkout with delivery address, cash or card payment
+- Order confirmation and order history
+- Role-based access: customer, manager, kitchen, admin
+- Manager tools: order dashboard and menu management
+- JWT authentication
 
-## Tech Stack
+## Tech stack
 
-- **Frontend:** React, [Tailwind / CSS: jo use hua wo likho]
+- **Frontend:** React, Vite, React Router, Axios
 - **Backend:** Node.js, Express
-- **Database:** MongoDB (Mongoose)
-- **Deployment:** Vercel
+- **Database:** MongoDB Atlas (Mongoose)
 
-## Screenshots
+## Getting started
 
-[Agar screenshots hain to yahan lagao: ![Home](docs/home.png)]
+### 1. Clone
 
-## Demo Logins
+```bash
+git clone <your-repo-url>
+cd ecommerce-store
+```
+
+### 2. Backend
+
+```bash
+cd backend
+npm install
+cp .env.example .env     # then fill in your own values
+npm run dev
+```
+
+The API runs on `http://localhost:5000`.
+
+### 3. Frontend
+
+```bash
+cd frontend
+npm install
+cp .env.example .env
+npm run dev
+```
+
+The app runs on `http://localhost:5173`.
+
+## Environment variables
+
+See `backend/.env.example` and `frontend/.env.example`. Never commit your real `.env` files.
+
+## Demo accounts
 
 | Role | Email | Password |
 |------|-------|----------|
-| Admin | admin@foodstore.com | Admin@123 |
-| Manager (Burger Lab) | manager1@foodstore.com | Manager@123 |
-| Customer | customer@foodstore.com | Customer@123 |
+| Manager | manager1@foodstore.com | _add password_ |
+| Customer | _add email_ | _add password_ |
 
-## Run Locally
+## API overview
 
-```bash
-# 1. Backend
-cd backend
-npm install
-# create a .env file with your MongoDB connection string and other variables
-node seed.js      # fills the database with demo data
-npm run dev
+| Route | Purpose |
+|-------|---------|
+| `/api/auth` | Register, login, logout, current user |
+| `/api/restaurants` | List and view restaurants |
+| `/api/menu/:restaurantId` | Menu for a restaurant |
+| `/api/cart` | Get cart, add items |
+| `/api/orders` | Place and view orders |
+| `/api/users` | Admin: list users |
 
-# 2. Frontend (new terminal)
-cd frontend
-npm install
-npm run dev
-```
+## Screenshots
 
-## Project Structure
-
-```
-ecommerce-store/
-├── backend/    Express API, models, seed.js
-└── frontend/   React app (images in public/images)
-```
+Add screenshots of Home, Menu, Cart, Checkout and the manager dashboard here.
 
 ## Author
 
-Umair, built during the Auspify internship.
+Dev - Auspify Internship, Cohort 16
