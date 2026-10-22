@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import AuthLayout, { IconInput, PasswordInput, StrengthMeter, MailIcon, UserIcon } from '../../components/AuthLayout';
 
 const Register = () => {
   const [form, setForm] = useState({ name: '', email: '', password: '' });
@@ -26,31 +27,33 @@ const Register = () => {
   };
 
   return (
-    <div className="auth-wrap">
-      <div className="auth-card fade-in">
-        <h1>Create your account</h1>
-        <p className="sub">It takes less than a minute.</p>
-        {error && <div className="auth-error">{error}</div>}
-        <form onSubmit={handleSubmit}>
-          <div className="field">
-            <label className="input-label" htmlFor="name">Full name</label>
-            <input id="name" name="name" className="input-field" value={form.name} onChange={handleChange} required />
-          </div>
-          <div className="field">
-            <label className="input-label" htmlFor="email">Email</label>
-            <input id="email" name="email" type="email" className="input-field" value={form.email} onChange={handleChange} required />
-          </div>
-          <div className="field">
-            <label className="input-label" htmlFor="password">Password</label>
-            <input id="password" name="password" type="password" className="input-field" value={form.password} onChange={handleChange} required />
-          </div>
-          <button type="submit" disabled={loading} className="btn btn-primary" style={{ width: '100%', padding: 13 }}>
-            {loading ? 'Creating account...' : 'Create account'}
-          </button>
-        </form>
-        <p className="auth-alt">Already have an account? <Link to="/login">Sign in</Link></p>
-      </div>
-    </div>
+    <AuthLayout
+      title="Create your account"
+      subtitle="It takes less than a minute."
+      error={error}
+      footer={<>Already have an account? <Link to="/login">Sign in</Link></>}
+    >
+      <form onSubmit={handleSubmit}>
+        <IconInput
+          id="name" name="name" label="Full name" icon={<UserIcon />}
+          placeholder="Your name" autoComplete="name"
+          value={form.name} onChange={handleChange} required
+        />
+        <IconInput
+          id="email" name="email" type="email" label="Email" icon={<MailIcon />}
+          placeholder="you@example.com" autoComplete="email"
+          value={form.email} onChange={handleChange} required
+        />
+        <PasswordInput
+          name="password" placeholder="Create a password" autoComplete="new-password"
+          value={form.password} onChange={handleChange} required
+        />
+        <StrengthMeter value={form.password} />
+        <button type="submit" disabled={loading} className="au-btn">
+          {loading ? 'Creating account...' : 'Create account'}
+        </button>
+      </form>
+    </AuthLayout>
   );
 };
 

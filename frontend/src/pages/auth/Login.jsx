@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import AuthLayout, { IconInput, PasswordInput, MailIcon } from '../../components/AuthLayout';
+
+// Demo account from the seed script. Delete DEMO and the "Use demo customer" button to remove the shortcut.
+const DEMO = { email: 'customer@foodstore.com', password: 'Customer@123' };
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -25,27 +29,36 @@ const Login = () => {
   };
 
   return (
-    <div className="auth-wrap">
-      <div className="auth-card fade-in">
-        <h1>Welcome back</h1>
-        <p className="sub">Sign in to order from your favourite stores.</p>
-        {error && <div className="auth-error">{error}</div>}
-        <form onSubmit={handleSubmit}>
-          <div className="field">
-            <label className="input-label" htmlFor="email">Email</label>
-            <input id="email" type="email" className="input-field" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          </div>
-          <div className="field">
-            <label className="input-label" htmlFor="password">Password</label>
-            <input id="password" type="password" className="input-field" value={password} onChange={(e) => setPassword(e.target.value)} required />
-          </div>
-          <button type="submit" disabled={loading} className="btn btn-primary" style={{ width: '100%', padding: 13 }}>
-            {loading ? 'Signing in...' : 'Sign in'}
-          </button>
-        </form>
-        <p className="auth-alt">New here? <Link to="/register">Create an account</Link></p>
-      </div>
-    </div>
+    <AuthLayout
+      title="Welcome back"
+      subtitle="Sign in to order from your favourite restaurants."
+      error={error}
+      footer={<>New here? <Link to="/register">Create an account</Link></>}
+    >
+      <form onSubmit={handleSubmit}>
+        <IconInput
+          id="email" label="Email" type="email" icon={<MailIcon />}
+          placeholder="you@example.com" autoComplete="email"
+          value={email} onChange={(e) => setEmail(e.target.value)} required
+        />
+        <PasswordInput
+          placeholder="Enter your password" autoComplete="current-password"
+          value={password} onChange={(e) => setPassword(e.target.value)} required
+        />
+        <button type="submit" disabled={loading} className="au-btn">
+          {loading ? 'Signing in...' : 'Sign in'}
+        </button>
+      </form>
+
+      <div className="au-or">or</div>
+      <button
+        type="button"
+        className="au-btn au-btn--ghost"
+        onClick={() => { setEmail(DEMO.email); setPassword(DEMO.password); }}
+      >
+        Use demo customer
+      </button>
+    </AuthLayout>
   );
 };
 
