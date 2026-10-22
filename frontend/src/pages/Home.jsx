@@ -36,6 +36,14 @@ const Home = () => {
   const [stores, setStores] = useState([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState('');
+  const [favs, setFavs] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('fav-restaurants')) || []; } catch { return []; }
+  });
+  const toggleFav = (id) => setFavs((cur) => {
+    const next = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
+    try { localStorage.setItem('fav-restaurants', JSON.stringify(next)); } catch { /* storage unavailable */ }
+    return next;
+  });
 
   useEffect(() => {
     getRestaurants()
@@ -130,6 +138,23 @@ const Home = () => {
         </section>
       )}
 
+      {/* FAVOURITES */}
+      {!loading && stores.some((s) => favs.includes(s._id)) && (
+        <section className="cd-section">
+          <div className="cd-wrap">
+            <div className="cd-head"><h2>Your favourites</h2></div>
+            <div className="cd-cats">
+              {stores.filter((s) => favs.includes(s._id)).map((s) => (
+                <Link key={s._id} to={`/restaurant/${s._id}`} className="cd-cat cd-cat--fav">
+                  <img src={s.coverImage || '/images/hero.jpg'} alt="" loading="lazy" onError={(e) => { e.currentTarget.src = '/images/hero.jpg'; }} />
+                  <span>{s.name}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* POPULAR RESTAURANTS */}
       <section className="cd-section">
         <div className="cd-wrap">
@@ -147,6 +172,17 @@ const Home = () => {
 
             {!loading && stores.map((s) => (
               <article key={s._id} className="cd-card">
+                <button
+                  type="button"
+                  className={`cd-heart ${favs.includes(s._id) ? 'is-on' : ''}`}
+                  onClick={() => toggleFav(s._id)}
+                  aria-pressed={favs.includes(s._id)}
+                  aria-label={favs.includes(s._id) ? `Remove ${s.name} from favourites` : `Add ${s.name} to favourites`}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill={favs.includes(s._id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z" />
+                  </svg>
+                </button>
                 <Link to={`/restaurant/${s._id}`} className="cd-card__img" tabIndex={-1} aria-hidden="true">
                   <img
                     src={s.coverImage || '/images/hero.jpg'}
