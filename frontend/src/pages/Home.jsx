@@ -2,8 +2,33 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { getRestaurants } from '../api/restaurantApi';
 import { useAuth } from '../context/AuthContext';
-import Spinner from '../components/Spinner';
-import StoreCard from '../components/StoreCard';
+import '../styles/home-chop.css';
+
+// Cuisine -> photo (all of these already exist in public/images)
+const CUISINE_IMG = {
+  'Fast Food': 'burger.avif',
+  American: 'fries.avif',
+  Italian: 'pasta.avif',
+  Pizza: 'pizza.avif',
+  Pakistani: 'biryani.jpg',
+  BBQ: 'kebab.avif',
+  Desserts: 'cake.avif',
+  Beverages: 'juice.avif',
+};
+
+const ROLE_HOME = { manager: '/manager', admin: '/admin', kitchen: '/kitchen' };
+
+const Star = ({ size = 14 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="m12 2.5 2.9 6.1 6.6.9-4.8 4.6 1.2 6.6L12 17.5l-5.9 3.2 1.2-6.6L2.5 9.5l6.6-.9z" />
+  </svg>
+);
+
+const Pin = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z" /><circle cx="12" cy="9.5" r="2.5" />
+  </svg>
+);
 
 const Home = () => {
   const { user, loading: authLoading } = useAuth();
@@ -11,114 +36,163 @@ const Home = () => {
   const [stores, setStores] = useState([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState('');
-  const [hero, setHero] = useState('');
 
   useEffect(() => {
     getRestaurants()
       .then((d) => setStores(d.restaurants || []))
-     .catch((e) => { console.error('STORES ERROR:', e); setStores([]); })
+      .catch((e) => { console.error('STORES ERROR:', e); setStores([]); })
       .finally(() => setLoading(false));
   }, []);
 
-  // Optional banner photo: hero.jpg / hero.avif in public/images is used automatically.
-  useEffect(() => {
-    const names = ['hero.jpg', 'hero.avif'];
-    const tryLoad = (i) => {
-      if (i >= names.length) return;
-      const im = new Image();
-      im.onload = () => setHero(`/images/${names[i]}`);
-      im.onerror = () => tryLoad(i + 1);
-      im.src = `/images/${names[i]}`;
-    };
-    tryLoad(0);
-  }, []);
+  const cuisines = useMemo(() => {
+    const set = new Set();
+    stores.forEach((s) => (s.cuisine || []).forEach((c) => set.add(c)));
+    return [...set];
+  }, [stores]);
 
-  const cuisines = useMemo(() => [...new Set(stores.flatMap((s) => s.cuisine || []))], [stores]);
+  const avg = useMemo(() => {
+    const rated = stores.filter((s) => s.rating);
+    if (!rated.length) return null;
+    return (rated.reduce((a, s) => a + s.rating, 0) / rated.length).toFixed(1);
+  }, [stores]);
 
-  if (authLoading) return <Spinner label="Loading..." />;
-  if (user && user.role !== 'customer') return <Navigate to={`/${user.role}`} replace />;
+  if (!authLoading && user && ROLE_HOME[user.role]) {
+    return <Navigate to={ROLE_HOME[user.role]} replace />;
+  }
 
-  const onSearch = (e) => {
-    e.preventDefault();
-    navigate(`/restaurants?q=${encodeURIComponent(q.trim())}`);
-  };
+  const go = (term) => navigate(term ? `/restaurants?q=${encodeURIComponent(term)}` : '/restaurants');
+  const onSubmit = (e) => { e.preventDefault(); go(q.trim()); };
 
   return (
-    <div className="theme-home fade-in">
-      <section className="ds-hero">
-        <div className="ds-container ds-hero__in">
-          <div>
-            <h1>Hungry? Get your favourite food delivered fast.</h1>
-            <p style={{ margin: '16px 0 28px', color: 'var(--ink-700)', fontSize: '1.1rem' }}>
-              Browse stores, pick what you love, and order in a few clicks.
-            </p>
-            <form className="ds-search" onSubmit={onSearch}>
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search stores or cuisines (e.g. Pizza, BBQ)" />
-              <button className="ds-btn" type="submit">Find food</button>
+    <div className="cd-home">
+      {/* HERO */}
+      <section className="cd-hero">
+        <div className="cd-wrap cd-hero__in">
+          <div className="cd-hero__text">
+            <span className="cd-pill">Fast delivery · Best prices</span>
+            <h1>
+              Delicious food,<br />delivered <span className="cd-accent">fast</span>
+            </h1>
+            <p>Order from your favourite restaurants near you.</p>
+
+            <form className="cd-search" onSubmit={onSubmit}>
+              <span className="cd-search__pin"><Pin /></span>
+              <input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Search restaurants or cuisines (e.g. Pizza, BBQ)"
+                aria-label="Search restaurants or cuisines"
+              />
+              <button type="submit" className="cd-btn">Find food</button>
             </form>
-            <div className="ds-stats">
-              <div><b>{stores.length}</b><span>Stores</span></div>
-              <div><b>Free</b><span>Delivery</span></div>
-              <div><b>Cash</b><span>or card</span></div>
-            </div>
+
+            <ul className="cd-facts">
+              <li><strong>{loading ? '–' : stores.length}</strong> restaurants</li>
+              <li><strong>Free</strong> delivery</li>
+              <li><strong>Cash</strong> or card</li>
+            </ul>
           </div>
-          <img className="ds-hero__img" src={hero || '/images/pizza.avif'} alt="" />
+
+          <div className="cd-hero__art">
+            <div className="cd-hero__blob" />
+            <img src="/images/burger.jpg" alt="Juicy burger" />
+            <div className="cd-float cd-float--top">
+              <b>Free</b>
+              <span>Delivery on every order</span>
+            </div>
+            {avg && (
+              <div className="cd-float cd-float--bottom">
+                <span className="cd-float__star"><Star size={22} /></span>
+                <div><b>{avg}</b><span>Avg. rating</span></div>
+              </div>
+            )}
+          </div>
         </div>
       </section>
 
+      {/* CATEGORIES */}
       {cuisines.length > 0 && (
-        <section className="ds-container ds-section" style={{ paddingBottom: 0 }}>
-          <div className="ds-section-head"><h2>Browse by cuisine</h2></div>
-          <div className="ds-chips">
-            {cuisines.map((c) => (
-              <Link key={c} to={`/restaurants?cuisine=${encodeURIComponent(c)}`} className="ds-chip">{c}</Link>
-            ))}
+        <section className="cd-section">
+          <div className="cd-wrap">
+            <div className="cd-head">
+              <h2>Explore categories</h2>
+              <Link to="/restaurants" className="cd-link">View all</Link>
+            </div>
+            <div className="cd-cats">
+              {cuisines.map((c) => (
+                <button key={c} type="button" className="cd-cat" onClick={() => go(c)}>
+                  <img src={`/images/${CUISINE_IMG[c] || 'burger.avif'}`} alt="" loading="lazy" />
+                  <span>{c}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </section>
       )}
 
-      <section className="ds-container ds-section">
-        <div className="ds-section-head">
-          <h2>Popular stores</h2>
-          <Link to="/restaurants" className="ds-link">View all</Link>
-        </div>
-        <div className="ds-grid">
-          {loading
-            ? [...Array(4)].map((_, i) => <div key={i} className="ds-skeleton ds-skeleton--card" />)
-            : stores.slice(0, 4).map((s) => <StoreCard key={s._id} store={s} />)}
-        </div>
-      </section>
-
-      <section className="ds-container" style={{ paddingBottom: 'var(--s-7)' }}>
-        <div className="ds-promo">
-          <div>
-            <h2 style={{ color: '#fff' }}>Free delivery on every order</h2>
-            <p style={{ margin: '8px 0 0' }}>Pick a store, fill your cart and we bring it to your door.</p>
+      {/* POPULAR RESTAURANTS */}
+      <section className="cd-section">
+        <div className="cd-wrap">
+          <div className="cd-head">
+            <h2>Popular restaurants</h2>
+            <Link to="/restaurants" className="cd-link">View all</Link>
           </div>
-          <Link to="/restaurants" className="ds-btn">Order now</Link>
+
+          <div className="cd-grid">
+            {loading && [0, 1, 2, 3].map((i) => <div key={i} className="cd-card cd-skel" />)}
+
+            {!loading && stores.length === 0 && (
+              <p className="cd-empty">No restaurants yet. Check back soon.</p>
+            )}
+
+            {!loading && stores.map((s) => (
+              <article key={s._id} className="cd-card">
+                <Link to={`/restaurant/${s._id}`} className="cd-card__img" tabIndex={-1} aria-hidden="true">
+                  <img
+                    src={s.coverImage || '/images/hero.jpg'}
+                    alt=""
+                    loading="lazy"
+                    onError={(e) => { e.currentTarget.src = '/images/hero.jpg'; }}
+                  />
+                  {s.rating ? (
+                    <span className="cd-rate"><Star size={12} /> {Number(s.rating).toFixed(1)}</span>
+                  ) : null}
+                </Link>
+                <div className="cd-card__body">
+                  <h3>{s.name}</h3>
+                  <p className="cd-card__meta">{(s.cuisine || []).join(', ')}</p>
+                  {s.openingHours && <p className="cd-card__hours">{s.openingHours}</p>}
+                  <Link to={`/restaurant/${s._id}`} className="cd-btn cd-btn--block">Order now</Link>
+                </div>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
-      <section className="ds-container ds-section" style={{ paddingTop: 0 }}>
-        <div className="ds-section-head"><h2>How it works</h2></div>
-        <div className="ds-grid">
-          {[
-            ['Pick a store', 'Browse stores and menus with photos and prices.'],
-            ['Add to cart', 'Choose items, change quantities and review your total.'],
-            ['Place your order', 'Checkout and track the status from My Orders.'],
-          ].map(([t, d], i) => (
-            <div key={t} className="ds-card ds-card--pad">
-              <span className="ds-badge ds-badge--offer">{i + 1}</span>
-              <h3 style={{ margin: '12px 0 6px' }}>{t}</h3>
-              <p className="ds-rcard__meta" style={{ margin: 0 }}>{d}</p>
+      {/* OFFER BANNER */}
+      <section className="cd-section">
+        <div className="cd-wrap">
+          <div className="cd-offer">
+            <div>
+              <h2>Free delivery on every order</h2>
+              <p>Pay by cash or card when your food arrives.</p>
             </div>
-          ))}
-        </div>
-        {!user && (
-          <div style={{ textAlign: 'center', marginTop: 'var(--s-6)' }}>
-            <Link to="/register" className="ds-btn">Create a free account</Link>
+            <Link to="/restaurants" className="cd-btn cd-btn--light">Order now</Link>
           </div>
-        )}
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section className="cd-section cd-section--last">
+        <div className="cd-wrap">
+          <div className="cd-head"><h2>How it works</h2></div>
+          <ol className="cd-steps">
+            <li><span>1</span><h3>Pick a restaurant</h3><p>Browse by cuisine or search by name.</p></li>
+            <li><span>2</span><h3>Add to cart</h3><p>Choose your dishes and review your order.</p></li>
+            <li><span>3</span><h3>Place your order</h3><p>Confirm your address and we deliver it.</p></li>
+          </ol>
+        </div>
       </section>
     </div>
   );

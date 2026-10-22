@@ -58,7 +58,7 @@ See `backend/.env.example` and `frontend/.env.example`. Never commit your real `
 | Role | Email | Password |
 |------|-------|----------|
 | Manager | manager1@foodstore.com | _add password_ |
-| Customer | _add email_ | _add password_ |
+| Customer | customer@foodstore.com | _add password_ |
 
 ## API overview
 
@@ -73,7 +73,19 @@ See `backend/.env.example` and `frontend/.env.example`. Never commit your real `
 
 ## Screenshots
 
-Add screenshots of Home, Menu, Cart, Checkout and the manager dashboard here.
+| Home | Stores |
+|------|--------|
+| ![Home](docs/screenshots/home.png) | ![Stores](docs/screenshots/stores.png) |
+
+| Restaurant menu | Cart |
+|-----------------|------|
+| ![Menu](docs/screenshots/menu.png) | ![Cart](docs/screenshots/cart.png) |
+
+| Checkout | My orders |
+|----------|-----------|
+| ![Checkout](docs/screenshots/checkout.png) | ![My orders](docs/screenshots/orders.png) |
+
+![Login](docs/screenshots/login.png)
 
 ## Author
 
