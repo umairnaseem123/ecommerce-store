@@ -41,6 +41,7 @@ app.use('/api/menu', require('./routes/menuRoutes'));
 app.use('/api/cart', require('./routes/cartRoutes'));
 app.use('/api/orders', require('./routes/orderRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/coupons', require('./routes/couponRoutes'));
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -51,3 +52,4 @@ app.use((err, req, res, next) => {
 });
 
 module.exports = app;
+

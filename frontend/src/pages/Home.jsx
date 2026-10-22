@@ -197,7 +197,13 @@ const Home = () => {
                 <div className="cd-card__body">
                   <h3>{s.name}</h3>
                   <p className="cd-card__meta">{(s.cuisine || []).join(', ')}</p>
-                  {s.openingHours && <p className="cd-card__hours">{s.openingHours}</p>}
+                  {(s.deliveryTime || s.openingHours) && (
+                    <p className="cd-card__hours">
+                      {s.deliveryTime ? `${s.deliveryTime} min delivery` : ''}
+                      {s.deliveryTime && s.openingHours ? ' | ' : ''}
+                      {s.openingHours}
+                    </p>
+                  )}
                   <Link to={`/restaurant/${s._id}`} className="cd-btn cd-btn--block">Order now</Link>
                 </div>
               </article>

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+﻿const mongoose = require('mongoose');
 
 const orderItemSchema = new mongoose.Schema(
   {
@@ -50,6 +50,11 @@ const orderSchema = new mongoose.Schema(
       state: String,
       zip: String,
     },
+    discount: {
+      type: Number,
+      default: 0,
+    },
+    couponCode: String,
     paymentMethod: {
       type: String,
       enum: ['cash', 'card'],

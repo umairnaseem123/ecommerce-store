@@ -1,80 +1,126 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { getMyOrders } from '../../api/orderApi';
-import StatusBadge from '../../components/StatusBadge';
-import EmptyState from '../../components/EmptyState';
+import { addToCart } from '../../api/cartApi';
+import { useCart } from '../../context/CartContext';
+import Spinner from '../../components/Spinner';
+import '../../styles/cart-chop.css';
+
+const LABEL = {
+  pending: 'Order placed',
+  confirmed: 'Confirmed',
+  preparing: 'Preparing',
+  out_for_delivery: 'Out for delivery',
+  delivered: 'Delivered',
+  cancelled: 'Cancelled',
+};
+const pillClass = (s) => (s === 'delivered' ? 'cc-pill--done' : s === 'cancelled' ? 'cc-pill--bad' : s === 'pending' ? '' : 'cc-pill--live');
+const isActive = (s) => !['delivered', 'cancelled'].includes(s);
 
 const MyOrders = () => {
+  const navigate = useNavigate();
+  const { refreshCart } = useCart();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+  const [busyId, setBusyId] = useState(null);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const data = await getMyOrders();
-        setOrders(data.orders);
-      } catch (err) {
-        setError('Failed to load your orders');
-      } finally {
-        setLoading(false);
-      }
-    })();
+  const load = useCallback(async (silent = false) => {
+    try {
+      const data = await getMyOrders();
+      setOrders(data.orders);
+      setError('');
+    } catch (err) {
+      if (!silent) setError('Failed to load your orders');
+    } finally {
+      if (!silent) setLoading(false);
+    }
   }, []);
 
-  return (
-    <div className="theme-tracking fade-in">
-      <div className="ds-container" style={{ maxWidth: 860, paddingBlock: 'var(--s-7)' }}>
-        <h1 style={{ fontSize: 'var(--fs-xl)' }}>My orders</h1>
-        <p className="ds-rcard__meta" style={{ margin: '6px 0 var(--s-5)' }}>Track your past and current orders</p>
+  useEffect(() => { load(); }, [load]);
 
-        {loading && (
-          <div style={{ display: 'grid', gap: 'var(--s-3)' }}>
-            {[...Array(3)].map((_, i) => <div key={i} className="ds-skeleton" style={{ height: 150 }} />)}
+  // Refresh every 15 seconds while any order is still in progress.
+  const hasActive = orders.some((o) => isActive(o.status));
+  useEffect(() => {
+    if (!hasActive) return undefined;
+    const t = setInterval(() => load(true), 15000);
+    return () => clearInterval(t);
+  }, [hasActive, load]);
+
+  const reorder = async (order) => {
+    setBusyId(order._id);
+    setNotice('');
+    let failed = 0;
+    for (const item of order.items) {
+      try {
+        await addToCart(item.menuItem, item.quantity);
+      } catch (err) {
+        failed += 1;
+      }
+    }
+    try { await refreshCart(); } catch (err) { /* cart page will reload it */ }
+    setBusyId(null);
+    if (failed === order.items.length) {
+      setNotice('Could not add these items. Your cart may have items from another restaurant, or the dishes are no longer available.');
+    } else {
+      navigate('/cart');
+    }
+  };
+
+  if (loading) return <Spinner label="Loading your orders..." />;
+
+  return (
+    <div className="cc-page">
+      <div className="cc-wrap" style={{ maxWidth: 860 }}>
+        <h1>My orders</h1>
+        <p className="cc-sub">
+          Track your past and current orders.{' '}
+          {hasActive && <span className="cc-live"><i /> Updating live</span>}
+        </p>
+
+        {notice && <div className="cc-notice" role="alert">{notice}</div>}
+        {error && <div className="cc-alert" role="alert">{error}</div>}
+
+        {!error && orders.length === 0 && (
+          <div className="cc-card cc-empty">
+            <h2>No orders yet</h2>
+            <p>When you place an order, it will show up here.</p>
+            <Link to="/restaurants" className="cc-btn cc-btn--auto">Browse restaurants</Link>
           </div>
         )}
 
-        {error && <EmptyState icon="⚠️" title="Error" subtitle={error} />}
-
-        {!loading && !error && orders.length === 0 && (
-          <EmptyState
-            icon="📦"
-            title="No orders yet"
-            subtitle="When you place an order, it'll show up here."
-            action={<Link to="/restaurants" className="ds-btn" style={{ marginTop: 16 }}>Browse stores</Link>}
-          />
-        )}
-
-        <div style={{ display: 'grid', gap: 'var(--s-4)' }}>
+        <div className="cc-orders">
           {orders.map((order) => {
-            const total = order.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+            const total = order.totalAmount ?? order.items.reduce((s, i) => s + i.price * i.quantity, 0);
             return (
-              <Link
-                key={order._id}
-                to={`/order-confirmation/${order._id}`}
-                className="ds-card ds-order"
-              >
-                <div className="ds-rcard__row" style={{ alignItems: 'flex-start', flexWrap: 'wrap' }}>
+              <article key={order._id} className="cc-card cc-order">
+                <div className="cc-order__top">
                   <div>
-                    <h3 style={{ fontSize: '1.05rem' }}>{order.restaurant?.name || 'Restaurant'}</h3>
-                    <p className="ds-rcard__meta" style={{ margin: '4px 0 0' }}>
-                      Order #{String(order._id).slice(-6).toUpperCase()} · {new Date(order.createdAt).toLocaleString()}
+                    <h3>{order.restaurant?.name || 'Restaurant'}</h3>
+                    <p className="cc-order__meta">
+                      Order #{String(order._id).slice(-6).toUpperCase()} | {new Date(order.createdAt).toLocaleString()}
                     </p>
                   </div>
-                  <StatusBadge status={order.status} />
+                  <span className={`cc-pill ${pillClass(order.status)}`}>{LABEL[order.status] || order.status}</span>
                 </div>
 
-                <div className="ds-order__items">
+                <div className="cc-order__items">
                   {order.items.map((item, idx) => (
-                    <span key={idx}>{item.name} × {item.quantity}</span>
+                    <span key={idx}>{item.name} x {item.quantity}</span>
                   ))}
                 </div>
 
-                <div className="ds-rcard__row">
-                  <strong className="ds-dish__price">Rs. {total}</strong>
-                  <span className="ds-link">View details →</span>
+                <div className="cc-order__foot">
+                  <strong className="cc-order__total">Rs. {total}</strong>
+                  <div className="cc-actions">
+                    <Link to={`/order-confirmation/${order._id}`} className="cc-link">View details</Link>
+                    <button type="button" className="cc-btn cc-btn--sm" disabled={busyId === order._id} onClick={() => reorder(order)}>
+                      {busyId === order._id ? 'Adding...' : 'Order again'}
+                    </button>
+                  </div>
                 </div>
-              </Link>
+              </article>
             );
           })}
         </div>

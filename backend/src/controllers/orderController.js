@@ -1,11 +1,12 @@
-const Order = require('../models/Order');
+﻿const Order = require('../models/Order');
 const Cart = require('../models/Cart');
+const { findCoupon } = require('../utils/coupons');
 
 // @desc   Create order from user's cart (checkout)
 // @route  POST /api/orders
 const createOrder = async (req, res) => {
   try {
-    const { deliveryAddress, paymentMethod } = req.body;
+    const { deliveryAddress, paymentMethod, couponCode } = req.body;
 
     const cart = await Cart.findOne({ user: req.user.id });
     if (!cart || cart.items.length === 0) {
@@ -17,11 +18,16 @@ const createOrder = async (req, res) => {
       0
     );
 
+    const coupon = findCoupon(couponCode);
+    const discount = coupon ? Math.round((totalAmount * coupon.percent) / 100) : 0;
+
     const order = await Order.create({
       user: req.user.id,
       restaurant: cart.restaurant,
       items: cart.items,
-      totalAmount,
+      totalAmount: totalAmount - discount,
+      discount,
+      couponCode: coupon ? coupon.code : undefined,
       deliveryAddress,
       paymentMethod: paymentMethod || 'cash',
     });
@@ -134,3 +140,6 @@ module.exports = {
   updateOrderStatus,
   getAllOrders,
 };
+
+
+

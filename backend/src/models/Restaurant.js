@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+﻿const mongoose = require('mongoose');
 
 const restaurantSchema = new mongoose.Schema(
   {
@@ -43,6 +43,10 @@ const restaurantSchema = new mongoose.Schema(
     rating: {
       type: Number,
       default: 0,
+    },
+    deliveryTime: {
+      type: Number,
+      default: 30,
     },
     isActive: {
       type: Boolean,

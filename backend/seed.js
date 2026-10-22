@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Demo data seeder for the food e-commerce store.
  *
  * Usage (from the backend folder):   node seed.js
@@ -35,6 +35,7 @@ const STORES = [
     cuisine: ['American', 'Fast Food'],
     city: 'Karachi',
     openingHours: '12:00 PM - 1:00 AM',
+    deliveryTime: 25,
     rating: 4.6,
     coverImage: img('burger.jpg'),
     categories: [
@@ -67,6 +68,7 @@ const STORES = [
     cuisine: ['Italian', 'Pizza'],
     city: 'Karachi',
     openingHours: '11:00 AM - 12:00 AM',
+    deliveryTime: 35,
     rating: 4.4,
     coverImage: img('pizza.avif'),
     categories: [
@@ -99,6 +101,7 @@ const STORES = [
     cuisine: ['Pakistani', 'BBQ'],
     city: 'Karachi',
     openingHours: '12:00 PM - 11:30 PM',
+    deliveryTime: 40,
     rating: 4.8,
     coverImage: img('biryani.jpg'),
     categories: [
@@ -131,6 +134,7 @@ const STORES = [
     cuisine: ['Desserts', 'Beverages'],
     city: 'Karachi',
     openingHours: '2:00 PM - 1:00 AM',
+    deliveryTime: 20,
     rating: 4.5,
     coverImage: img('icecream.avif'),
     categories: [
@@ -189,6 +193,7 @@ async function run() {
       coverImage: s.coverImage,
       openingHours: s.openingHours,
       rating: s.rating,
+      deliveryTime: s.deliveryTime || 30,
     });
 
     let order = 0;
@@ -225,3 +230,8 @@ run().catch(async (err) => {
   await mongoose.disconnect().catch(() => {});
   process.exit(1);
 });
+
+
+
+
+

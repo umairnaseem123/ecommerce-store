@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { createOrder } from '../../api/orderApi';
+import { validateCoupon } from '../../api/couponApi';
 import Spinner from '../../components/Spinner';
 import '../../styles/cart-chop.css';
 
@@ -33,6 +34,10 @@ const Checkout = () => {
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [code, setCode] = useState('');
+  const [coupon, setCoupon] = useState(null);
+  const [couponMsg, setCouponMsg] = useState({ text: '', ok: false });
+  const [applying, setApplying] = useState(false);
 
   if (loading) return <Spinner label="Loading checkout..." />;
 
@@ -51,7 +56,25 @@ const Checkout = () => {
     );
   }
 
-  const total = cart.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const subtotal = cart.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const discount = coupon ? Math.round((subtotal * coupon.percent) / 100) : 0;
+  const total = subtotal - discount;
+
+  const applyCoupon = async () => {
+    if (!code.trim()) return;
+    setApplying(true);
+    setCouponMsg({ text: '', ok: false });
+    try {
+      const data = await validateCoupon(code);
+      setCoupon(data.coupon);
+      setCouponMsg({ text: `${data.coupon.code} applied: ${data.coupon.label}`, ok: true });
+    } catch (err) {
+      setCoupon(null);
+      setCouponMsg({ text: err.response?.data?.message || 'Could not apply coupon', ok: false });
+    } finally {
+      setApplying(false);
+    }
+  };
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
@@ -64,7 +87,7 @@ const Checkout = () => {
 
     setSubmitting(true);
     try {
-      const data = await createOrder({ deliveryAddress: { street, city, state, zip }, paymentMethod });
+      const data = await createOrder({ deliveryAddress: { street, city, state, zip }, paymentMethod, couponCode: coupon?.code });
       await refreshCart();
       navigate(`/order-confirmation/${data.order._id}`);
     } catch (err) {
@@ -132,8 +155,23 @@ const Checkout = () => {
                 </div>
               ))}
               <div className="cc-line"><span>Delivery fee</span><span className="cc-free">Free</span></div>
+              {discount > 0 && (
+                <div className="cc-line"><span>Discount ({coupon.code})</span><span className="cc-free">- Rs. {discount}</span></div>
+              )}
               <div className="cc-line cc-line--total"><span>Total</span><span>Rs. {total}</span></div>
             </div>
+            <div className="cc-coupon">
+              <input
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="Coupon code"
+                aria-label="Coupon code"
+              />
+              <button type="button" className="cc-btn cc-btn--ghost" onClick={applyCoupon} disabled={applying}>
+                {applying ? '...' : 'Apply'}
+              </button>
+            </div>
+            {couponMsg.text && <p className={`cc-coupon__msg ${couponMsg.ok ? 'is-ok' : 'is-bad'}`}>{couponMsg.text}</p>}
             <button type="submit" form="checkout-form" disabled={submitting} className="cc-btn">
               {submitting ? 'Placing order...' : `Place order - Rs. ${total}`}
             </button>
