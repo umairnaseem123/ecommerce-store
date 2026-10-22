@@ -57,8 +57,8 @@ See `backend/.env.example` and `frontend/.env.example`. Never commit your real `
 
 | Role | Email | Password |
 |------|-------|----------|
-| Manager | manager1@foodstore.com | _add password_ |
-| Customer | customer@foodstore.com | _add password_ |
+| Manager | manager1@foodstore.com | Manager@123 |
+| Customer | customer@foodstore.com | Customer@123 |
 
 ## API overview
 
@@ -90,3 +90,4 @@ See `backend/.env.example` and `frontend/.env.example`. Never commit your real `
 ## Author
 
 Dev - Auspify Internship, Cohort 16
+
