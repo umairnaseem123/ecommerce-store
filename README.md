@@ -1,4 +1,4 @@
-# RestaurantOS - Food Delivery App
+﻿# RestaurantOS - Food Delivery App
 
 A full-stack food delivery platform built for the Auspify Technologies Full Stack internship. Customers browse restaurants, add dishes to a cart and place orders. Managers, kitchen staff and admins each get their own dashboard.
 
@@ -11,6 +11,13 @@ A full-stack food delivery platform built for the Auspify Technologies Full Stac
 - Role-based access: customer, manager, kitchen, admin
 - Manager tools: order dashboard and menu management
 - JWT authentication
+- Favourite restaurants (heart icon, saved in the browser)
+- Live order tracking: placed, confirmed, preparing, on the way, delivered
+- Order again from past orders
+- Coupon codes at checkout (try WELCOME20 or FOOD10)
+- Delivery time on restaurant cards
+- Manager dashboard refreshes new orders automatically
+- Login rate limiting and secure HTTP headers
 
 ## Tech stack
 

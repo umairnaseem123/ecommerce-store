@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { getMyRestaurants } from '../../api/restaurantApi';
 import { getRestaurantOrders, updateOrderStatus } from '../../api/orderApi';
 import Spinner from '../../components/Spinner';
@@ -67,6 +67,12 @@ const OrderDashboard = () => {
     init();
   }, []);
 
+  useEffect(() => {
+    if (!restaurant) return undefined;
+    const t = setInterval(() => loadOrders(restaurant._id), 10000);
+    return () => clearInterval(t);
+  }, [restaurant]);
+
   const handleStatusUpdate = async (orderId, newStatus) => {
     setUpdatingId(orderId);
     try {
@@ -80,7 +86,7 @@ const OrderDashboard = () => {
   };
 
   if (loading) return <Spinner label="Loading dashboard..." />;
-  if (error) return <div className="page-container"><EmptyState icon="⚠️" title="Error" subtitle={error} /></div>;
+  if (error) return <div className="page-container"><EmptyState icon="âš ï¸" title="Error" subtitle={error} /></div>;
 
   const activeOrders = orders.filter((o) => !['delivered', 'cancelled'].includes(o.status));
   const revenueToday = orders
@@ -98,9 +104,9 @@ const OrderDashboard = () => {
 
       {/* Stat cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14, marginBottom: 28 }}>
-        <StatCard label="Total Orders" value={orders.length} icon="📦" color="var(--color-primary-light)" />
-        <StatCard label="Active Orders" value={activeOrders.length} icon="🔥" color="#fef3c7" />
-        <StatCard label="Revenue Today" value={`Rs. ${revenueToday}`} icon="💰" color="#dcfce7" />
+        <StatCard label="Total Orders" value={orders.length} icon="ðŸ“¦" color="var(--color-primary-light)" />
+        <StatCard label="Active Orders" value={activeOrders.length} icon="ðŸ”¥" color="#fef3c7" />
+        <StatCard label="Revenue Today" value={`Rs. ${revenueToday}`} icon="ðŸ’°" color="#dcfce7" />
       </div>
 
       {/* Filter tabs */}
@@ -127,7 +133,7 @@ const OrderDashboard = () => {
       </div>
 
       {filteredOrders.length === 0 && (
-        <EmptyState icon="📭" title="No orders here" subtitle="Orders matching this filter will show up here." />
+        <EmptyState icon="ðŸ“­" title="No orders here" subtitle="Orders matching this filter will show up here." />
       )}
 
       <div style={{ display: 'grid', gap: 14 }}>
@@ -151,7 +157,7 @@ const OrderDashboard = () => {
               <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--color-border)' }}>
                 {order.items.map((item, idx) => (
                   <p key={idx} style={{ margin: '2px 0', fontSize: 14 }}>
-                    {item.name} × {item.quantity} <span style={{ color: 'var(--color-text-muted)' }}>— Rs. {item.price * item.quantity}</span>
+                    {item.name} Ã— {item.quantity} <span style={{ color: 'var(--color-text-muted)' }}>â€” Rs. {item.price * item.quantity}</span>
                   </p>
                 ))}
               </div>
